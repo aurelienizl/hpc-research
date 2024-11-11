@@ -3,7 +3,7 @@ Innovative Computing Laboratory, University of Tennessee
 HPL.out      output file name (if any)
 6            device out (6=stdout,7=stderr,file)
 1            # of problems sizes (N)
-1000         Ns                # Reduced problem size for fast execution
+3000         Ns                # Reduced problem size for fast execution
 1            # of NBs
 64           NBs               # Keep block size small for a quick test
 0            PMAP process mapping (0=Row-,1=Column-major)

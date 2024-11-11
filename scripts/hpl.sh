@@ -53,6 +53,11 @@ install_dependencies() {
 
 # Install BLAS/LAPACK
 install_blas_lapack() {
+
+    # Save current directory
+    current_dir=$(pwd)
+    cd /tmp
+
     echo "Installing BLAS/LAPACK..."
 
     # Remove existing v3.12.0.tar.gz if it exists
@@ -65,10 +70,18 @@ install_blas_lapack() {
     make blaslib -j${nbproc}
     make lapacklib -j${nbproc}
     cd ..
+
+    # Return to original directory
+    cd "$current_dir"
 }
 
 # Install HPL
 install_hpl() {
+
+    # Save current directory
+    current_dir=$(pwd)
+    cd /tmp
+
     echo "Installing HPL..."
 
     # Remove existing hpl-2.3.tar.gz if it exists
@@ -88,10 +101,18 @@ install_hpl() {
     make -j${nbproc}
     sudo make install
     cd ..
+
+    # Return to original directory
+    cd "$current_dir"
 }
 
 # Setup HPL configuration
 setup_hpl() {
+
+    # Save current directory
+    current_dir=$(pwd)
+    cd /tmp
+
     echo "Setting up HPL configuration..."
 
     # Remove existing HPL.dat if it exists
@@ -109,6 +130,9 @@ setup_hpl() {
         echo "Please check network connectivity and write permissions on /usr/local/hpl/bin/"
         exit 1
     fi
+
+    # Return to original directory
+    cd "$current_dir"
 }
 
 # Cleanup

@@ -13,7 +13,7 @@
 set -e  # Exit on any error
 
 COMMAND=$1
-OUTPUT_FILE="collectl_results_$(date +%Y%m%d_%H%M%S).lexpr"
+OUTPUT_FILE="/hpc-research/results/collectl_results_$(date +%Y%m%d_%H%M%S).lexpr"
 
 install_collectl() {
     echo "Checking if Collectl is installed..."
@@ -53,16 +53,16 @@ start_collectl() {
 }
 
 stop_collectl() {
-    if [ -f "collectl_pid.txt" ]; then
+    if [ -f "/tmp/collectl_pid.txt" ]; then
         COLLECTL_PID=$(cat /tmp/collectl_pid.txt)
         if ps -p $COLLECTL_PID > /dev/null; then
             echo "Stopping Collectl with PID $COLLECTL_PID..."
             kill $COLLECTL_PID
-            rm collectl_pid.txt
+            rm /tmp/collectl_pid.txt
             echo "Collectl has been stopped."
         else
             echo "Collectl is not running or PID not found."
-            rm collectl_pid.txt
+            rm /tmp/collectl_pid.txt
         fi
     else
         echo "No running Collectl process found."

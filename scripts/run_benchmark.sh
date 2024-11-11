@@ -42,11 +42,11 @@ get_process_number() {
     echo "Downloading PROCESS.txt..."
 
     # Download PROCESS.txt with retry mechanism
-    wget --retry-connrefused --waitretry=2 --read-timeout=20 --timeout=15 -t 5 https://git.server-paris.synology.me/aurelienizl/hpc-research/raw/branch/main/config/export/PROCESS.txt -O PROCESS.txt
+    wget --retry-connrefused --waitretry=2 --read-timeout=20 --timeout=15 -t 5 https://git.server-paris.synology.me/aurelienizl/hpc-research/raw/branch/main/config/export/PROCESS.txt -O /tmp/PROCESS.txt
 
     # Verify that PROCESS.txt exists and extract the process number
-    if [ -f "PROCESS.txt" ]; then
-        PROC_NUMBER=$(cat PROCESS.txt)
+    if [ -f "/tmp/PROCESS.txt" ]; then
+        PROC_NUMBER=$(cat /tmp/PROCESS.txt)
         echo "Process number for HPL: $PROC_NUMBER"
     else
         echo "Error: PROCESS.txt download failed after retries."
@@ -58,10 +58,14 @@ get_process_number() {
 # Function to run HPL benchmark
 run_hpl() {
     echo "Starting HPL benchmark..."
+    # Saving current directory
+    CURRENT_DIR=$(pwd)
     cd /usr/local/hpl/bin
-    mpirun -np $PROC_NUMBER --use-hwthread-cpus ./xhpl > "hpl_output_$(date +%Y%m%d_%H%M%S).log" &
+    mpirun -np $PROC_NUMBER --use-hwthread-cpus ./xhpl > "/hpc-research/results/hpl_output_$(date +%Y%m%d_%H%M%S).log" &
     HPL_PID=$!
     echo "HPL is running with PID $HPL_PID"
+    # Returning to the original directory
+    cd $CURRENT_DIR
 }
 
 # Function to start Collectl
@@ -100,7 +104,7 @@ main() {
     # Stop Collectl
     stop_collectl
 
-    echo "Benchmark workflow completed. Results are saved in logs."
+    echo "Benchmark workflow completed. Results are saved in results."
 }
 
 # Run the main function
