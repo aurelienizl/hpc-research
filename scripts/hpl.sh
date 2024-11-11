@@ -54,6 +54,10 @@ install_dependencies() {
 # Install BLAS/LAPACK
 install_blas_lapack() {
     echo "Installing BLAS/LAPACK..."
+
+    # Remove existing v3.12.0.tar.gz if it exists
+    [ -f "v3.12.0.tar.gz" ] && rm -rf "v3.12.0.tar.gz"
+
     wget https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.12.0.tar.gz
     tar -xzf v3.12.0.tar.gz
     cd lapack-3.12.0
@@ -66,6 +70,10 @@ install_blas_lapack() {
 # Install HPL
 install_hpl() {
     echo "Installing HPL..."
+
+    # Remove existing hpl-2.3.tar.gz if it exists
+    [ -f "hpl-2.3.tar.gz" ] && rm -rf "hpl-2.3.tar.gz"
+
     wget https://www.netlib.org/benchmark/hpl/hpl-2.3.tar.gz
     tar -xzf hpl-2.3.tar.gz
     cd hpl-2.3
@@ -84,20 +92,22 @@ install_hpl() {
 
 # Setup HPL configuration
 setup_hpl() {
-
     echo "Setting up HPL configuration..."
 
-    if [ -f "HPL.dat" ]; then
-        rm "HPL.dat"
-    fi
+    # Remove existing HPL.dat if it exists
+    [ -f "HPL.dat" ] && rm "HPL.dat"
 
-    wget https://git.server-paris.synology.me/aurelienizl/hpc-research/raw/branch/main/config/export/HPL.dat
+    # Download HPL.dat with retry mechanism
+    wget --retry-connrefused --waitretry=2 --read-timeout=20 --timeout=15 -t 5 https://git.server-paris.synology.me/aurelienizl/hpc-research/raw/branch/main/config/export/HPL.dat -O HPL.dat
 
+    # Check if HPL.dat was successfully downloaded
     if [ -f "HPL.dat" ]; then
         sudo mv HPL.dat /usr/local/hpl/bin/
+        echo "HPL.dat successfully moved to /usr/local/hpl/bin/"
     else
-        echo "Warning: HPL.dat not found in current directory"
-        echo "Check network or write permissions on the current directory"
+        echo "Warning: HPL.dat download failed after retries."
+        echo "Please check network connectivity and write permissions on /usr/local/hpl/bin/"
+        exit 1
     fi
 }
 

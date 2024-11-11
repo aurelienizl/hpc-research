@@ -3,13 +3,13 @@ Innovative Computing Laboratory, University of Tennessee
 HPL.out      output file name (if any)
 6            device out (6=stdout,7=stderr,file)
 1            # of problems sizes (N)
-13500        Ns                # Utilizes around 1.5GB of memory per VM
+49500          Ns                # Utilized memory based on configuration
 1            # of NBs
 64           NBs               # Smaller block size due to limited cache and memory
 0            PMAP process mapping (0=Row-,1=Column-major)
 1            # of process grids (P x Q)
-1            Ps                # Single core, single row grid
-1            Qs                # Single column
+1          Ps                # Rows in process grid
+12          Qs                # Columns in process grid
 16.0         threshold
 1            # of panel fact
 2            PFACTs (0=left, 1=Crout, 2=Right)

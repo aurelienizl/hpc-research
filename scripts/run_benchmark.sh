@@ -10,6 +10,10 @@
 
 set -e  # Exit on any error
 
+# Allow Open MPI to run as root
+export OMPI_ALLOW_RUN_AS_ROOT=1
+export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+
 # Paths to scripts
 HPL_SETUP_SCRIPT="./hpl.sh"
 COLLECTL_SCRIPT="./collectl.sh"
@@ -31,13 +35,17 @@ install_collectl() {
 # Function to download the process number
 get_process_number() {
     echo "Downloading PROCESS.txt..."
-    wget -q https://git.server-paris.synology.me/aurelienizl/hpc-research/raw/branch/main/config/export/PROCESS.txt -O PROCESS.txt
-    
+
+    # Download PROCESS.txt with retry mechanism
+    wget --retry-connrefused --waitretry=2 --read-timeout=20 --timeout=15 -t 5 https://git.server-paris.synology.me/aurelienizl/hpc-research/raw/branch/main/config/export/PROCESS.txt -O PROCESS.txt
+
+    # Verify that PROCESS.txt exists and extract the process number
     if [ -f "PROCESS.txt" ]; then
         PROC_NUMBER=$(cat PROCESS.txt)
         echo "Process number for HPL: $PROC_NUMBER"
     else
-        echo "Error: PROCESS.txt not found or failed to download."
+        echo "Error: PROCESS.txt download failed after retries."
+        echo "Please check network connectivity."
         exit 1
     fi
 }
