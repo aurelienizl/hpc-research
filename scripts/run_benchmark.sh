@@ -18,6 +18,11 @@ export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
 HPL_SETUP_SCRIPT="./hpl.sh"
 COLLECTL_SCRIPT="./collectl.sh"
 
+disable_sleep() {
+    echo "Disabling sleep, suspend, hibernate, and hybrid-sleep..."
+    sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
+}
+
 # Function to run hpl.sh as root to set up HPL
 setup_hpl() {
     echo "Running HPL setup script..."
@@ -73,6 +78,10 @@ stop_collectl() {
 
 # Main workflow
 main() {
+
+    # Disable sleep, suspend, hibernate, and hybrid-sleep
+    disable_sleep
+
     # Setup HPL and install Collectl
     setup_hpl
     install_collectl
