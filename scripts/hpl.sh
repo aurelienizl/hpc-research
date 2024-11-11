@@ -36,7 +36,9 @@ install_dependencies() {
             wget \
             make \
             openmpi-bin \
-            libopenmpi-dev
+            libopenmpi-dev \
+            libblas-dev \
+            liblapack-dev
     elif command_exists yum; then
         sudo yum groupinstall -y "Development Tools"
         sudo yum install -y \
