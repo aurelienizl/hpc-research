@@ -59,7 +59,7 @@ get_process_number() {
 run_hpl() {
     echo "Starting HPL benchmark..."
     cd /usr/local/hpl/bin
-    mpirun -np $PROC_NUMBER ./xhpl > "hpl_output_$(date +%Y%m%d_%H%M%S).log" &
+    mpirun -np $PROC_NUMBER --use-hwthread-cpus ./xhpl > "hpl_output_$(date +%Y%m%d_%H%M%S).log" &
     HPL_PID=$!
     echo "HPL is running with PID $HPL_PID"
 }
