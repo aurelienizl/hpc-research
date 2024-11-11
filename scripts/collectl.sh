@@ -3,78 +3,69 @@
 # -----------------------------------------------------------------------------
 # Author: Aurélien Izoulet
 # Email: aurelien.izoulet@epita.fr
-# Script to manage collectl service and logs
-# This script performs the following tasks depending the parameter given :
-# 1. install:   Installs collectl if not already installed
-# 2. start:     Clears collectl logs and metrics,
-#               Starts collectl service
-# 4. stop:      Stops collectl service
-# 5. extract:   Extracts collectl data into a raw file
+# Script to manage Collectl for HPC benchmarking sessions
+# Usage:
+#   ./collectl_manager.sh start - to start Collectl in the background
+#   ./collectl_manager.sh stop - to stop Collectl gracefully
 # -----------------------------------------------------------------------------
 
-# Function to install collectl if not already installed
-install_collectl() {
+set -e  # Exit on any error
+
+COMMAND=$1
+OUTPUT_FILE="collectl_results_$(date +%Y%m%d_%H%M%S).lexpr"
+
+start_collectl() {
+    echo "Starting Collectl in the background..."
+
+    # Check if Collectl is installed
     if ! command -v collectl &> /dev/null; then
-        echo "Collectl not found. Installing..."
-        sudo apt-get update
-        sudo apt-get install -y collectl
+        echo "Collectl is not installed. Installing now..."
+        if command -v apt-get &> /dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y collectl
+        elif command -v yum &> /dev/null; then
+            sudo yum install -y collectl
+        else
+            echo "Error: Unsupported package manager"
+            exit 1
+        fi
+    fi
+
+    # Start Collectl in the background with custom options and save results to a file
+    collectl -oT -scCdmn --export lexpr > "$OUTPUT_FILE" &
+    COLLECTL_PID=$!
+    echo $COLLECTL_PID > collectl_pid.txt
+
+    echo "Collectl is now running in the background with PID $COLLECTL_PID"
+    echo "Results are being saved to $OUTPUT_FILE"
+}
+
+stop_collectl() {
+    if [ -f "collectl_pid.txt" ]; then
+        COLLECTL_PID=$(cat collectl_pid.txt)
+        if ps -p $COLLECTL_PID > /dev/null; then
+            echo "Stopping Collectl with PID $COLLECTL_PID..."
+            kill $COLLECTL_PID
+            rm collectl_pid.txt
+            echo "Collectl has been stopped."
+        else
+            echo "Collectl is not running or PID not found."
+            rm collectl_pid.txt
+        fi
     else
-        echo "Collectl is already installed."
+        echo "No running Collectl process found."
     fi
 }
 
-# Function to clear collectl logs and metrics
-clear_logs() {
-    echo "Clearing collectl logs and metrics..."
-    sudo rm -f /var/log/collectl/*.raw
-    sudo rm -f /var/log/collectl/*.gz
-    echo "Logs and metrics cleared."
-}
-
-# Function to start collectl service
-start_collectl() {
-    echo "Starting collectl service..."
-    sudo systemctl enable collectl
-    sudo systemctl start collectl
-    echo "Collectl service started."
-}
-
-# Function to stop collectl service
-stop_collectl() {
-    echo "Stopping collectl service..."
-    sudo systemctl stop collectl
-    sudo systemctl disable collectl
-    echo "Collectl service stopped."
-}
-
-# Function to extract data into a raw file
-extract_raw() {
-    echo "Extracting raw data file..."
-    log_dir="/var/log/collectl"
-    raw_file="${log_dir}/collectl-data.raw"
-    sudo gunzip -c ${log_dir}/*.gz > $raw_file
-    sudo cat ${log_dir}/*.raw >> $raw_file
-    sudo chown $USER:$USER $raw_file
-    echo "Raw data extracted to $raw_file."
-}
-
-# Main script logic
-case "$1" in
-    install)
-        install_collectl
-        ;;
+case $COMMAND in
     start)
-        clear_logs
         start_collectl
         ;;
     stop)
         stop_collectl
         ;;
-    extract)
-        extract_raw
-        ;;
     *)
-        echo "Usage: $0 {install|start|stop|extract}"
+        echo "Usage: $0 {start|stop}"
         exit 1
         ;;
 esac
