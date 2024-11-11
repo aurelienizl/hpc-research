@@ -5,6 +5,7 @@
 # Email: aurelien.izoulet@epita.fr
 # Script to manage Collectl for HPC benchmarking sessions
 # Usage:
+#   ./collectl_manager.sh install - to install Collectl
 #   ./collectl_manager.sh start - to start Collectl in the background
 #   ./collectl_manager.sh stop - to stop Collectl gracefully
 # -----------------------------------------------------------------------------
@@ -14,10 +15,8 @@ set -e  # Exit on any error
 COMMAND=$1
 OUTPUT_FILE="collectl_results_$(date +%Y%m%d_%H%M%S).lexpr"
 
-start_collectl() {
-    echo "Starting Collectl in the background..."
-
-    # Check if Collectl is installed
+install_collectl() {
+    echo "Checking if Collectl is installed..."
     if ! command -v collectl &> /dev/null; then
         echo "Collectl is not installed. Installing now..."
         if command -v apt-get &> /dev/null; then
@@ -29,6 +28,19 @@ start_collectl() {
             echo "Error: Unsupported package manager"
             exit 1
         fi
+        echo "Collectl installation completed."
+    else
+        echo "Collectl is already installed."
+    fi
+}
+
+start_collectl() {
+    echo "Starting Collectl in the background..."
+
+    # Check if Collectl is installed
+    if ! command -v collectl &> /dev/null; then
+        echo "Collectl is not installed. Run '$0 install' to install it."
+        exit 1
     fi
 
     # Start Collectl in the background with custom options and save results to a file
@@ -58,6 +70,9 @@ stop_collectl() {
 }
 
 case $COMMAND in
+    install)
+        install_collectl
+        ;;
     start)
         start_collectl
         ;;
@@ -65,7 +80,7 @@ case $COMMAND in
         stop_collectl
         ;;
     *)
-        echo "Usage: $0 {start|stop}"
+        echo "Usage: $0 {install|start|stop}"
         exit 1
         ;;
 esac
