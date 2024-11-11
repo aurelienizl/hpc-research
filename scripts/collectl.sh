@@ -46,7 +46,7 @@ start_collectl() {
     # Start Collectl in the background with custom options and save results to a file
     collectl -oT -scCdmn --export lexpr > "$OUTPUT_FILE" &
     COLLECTL_PID=$!
-    echo $COLLECTL_PID > collectl_pid.txt
+    echo $COLLECTL_PID > /tmp/collectl_pid.txt
 
     echo "Collectl is now running in the background with PID $COLLECTL_PID"
     echo "Results are being saved to $OUTPUT_FILE"
@@ -54,7 +54,7 @@ start_collectl() {
 
 stop_collectl() {
     if [ -f "collectl_pid.txt" ]; then
-        COLLECTL_PID=$(cat collectl_pid.txt)
+        COLLECTL_PID=$(cat /tmp/collectl_pid.txt)
         if ps -p $COLLECTL_PID > /dev/null; then
             echo "Stopping Collectl with PID $COLLECTL_PID..."
             kill $COLLECTL_PID
