@@ -56,8 +56,8 @@ install_blas_lapack() {
     tar -xzf v3.12.0.tar.gz
     cd lapack-3.12.0
     cp make.inc.example make.inc
-    make blaslib
-    make lapacklib
+    make blaslib -j${nbproc}
+    make lapacklib -j${nbproc}
     cd ..
 }
 
@@ -75,7 +75,7 @@ install_hpl() {
         CC=mpicc \
         --prefix=/usr/local/hpl
 
-    make
+    make -j${nbproc}
     sudo make install
     cd ..
 }
