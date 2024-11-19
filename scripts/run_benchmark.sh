@@ -61,9 +61,11 @@ run_hpl() {
     # Saving current directory
     CURRENT_DIR=$(pwd)
     cd /usr/local/hpl/bin
-    mpirun -np $PROC_NUMBER --use-hwthread-cpus ./xhpl > "/hpc-research/results/hpl_output_$(date +%Y%m%d_%H%M%S).log" &
+    FILENAME="$CURRENT_DIR/hpl_output_$(date +%Y%m%d_%H%M%S).log"
+    mpirun -np $PROC_NUMBER --use-hwthread-cpus ./xhpl > "$CURRENT_DIR" &
     HPL_PID=$!
     echo "HPL is running with PID $HPL_PID"
+    echo "HPL output is saved to $OUTPUT_DIR"
     # Returning to the original directory
     cd $CURRENT_DIR
 }

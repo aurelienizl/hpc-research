@@ -13,7 +13,7 @@
 set -e  # Exit on any error
 
 COMMAND=$1
-OUTPUT_FILE="/hpc-research/results/collectl_results_$(date +%Y%m%d_%H%M%S).lexpr"
+OUTPUT_FILE="$(pwd)/collectl_results_$(date +%Y%m%d_%H%M%S).lexpr"
 
 install_collectl() {
     echo "Checking if Collectl is installed..."
