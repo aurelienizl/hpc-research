@@ -46,30 +46,6 @@ install_dependencies() {
     fi
 }
 
-# Install BLAS/LAPACK
-install_blas_lapack() {
-
-    # Save current directory
-    current_dir=$(pwd)
-    cd /tmp
-
-    echo "Installing BLAS/LAPACK..."
-
-    # Remove existing v3.12.0.tar.gz if it exists
-    [ -f "v3.12.0.tar.gz" ] && rm -rf "v3.12.0.tar.gz"
-
-    wget https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.12.0.tar.gz
-    tar -xzf v3.12.0.tar.gz
-    cd lapack-3.12.0
-    cp make.inc.example make.inc
-    make blaslib -j${nbproc}
-    make lapacklib -j${nbproc}
-    cd ..
-
-    # Return to original directory
-    cd "$current_dir"
-}
-
 # Install HPL
 install_hpl() {
 
@@ -111,7 +87,6 @@ cleanup() {
 # Main installation process
 main() {
     install_dependencies
-    install_blas_lapack
     install_hpl
     cleanup
 
