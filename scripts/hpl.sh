@@ -38,13 +38,8 @@ install_dependencies() {
             openmpi-bin \
             libopenmpi-dev \
             libblas-dev \
-            liblapack-dev
-    elif command_exists yum; then
-        sudo yum groupinstall -y "Development Tools"
-        sudo yum install -y \
-            gcc-gfortran \
-            wget \
-            openmpi-devel
+            liblapack-dev \
+            python3-psutil
     else
         echo "Error: Unsupported package manager"
         exit 1
@@ -106,35 +101,6 @@ install_hpl() {
     cd "$current_dir"
 }
 
-# Setup HPL configuration
-setup_hpl() {
-
-    # Save current directory
-    current_dir=$(pwd)
-    cd /tmp
-
-    echo "Setting up HPL configuration..."
-
-    # Remove existing HPL.dat if it exists
-    [ -f "HPL.dat" ] && rm "HPL.dat"
-
-    # Download HPL.dat with retry mechanism
-    wget --retry-connrefused --waitretry=2 --read-timeout=20 --timeout=15 -t 5 https://git.server-paris.synology.me/aurelienizl/hpc-research/raw/branch/main/config/export/HPL.dat -O HPL.dat
-
-    # Check if HPL.dat was successfully downloaded
-    if [ -f "HPL.dat" ]; then
-        sudo mv HPL.dat /usr/local/hpl/bin/
-        echo "HPL.dat successfully moved to /usr/local/hpl/bin/"
-    else
-        echo "Warning: HPL.dat download failed after retries."
-        echo "Please check network connectivity and write permissions on /usr/local/hpl/bin/"
-        exit 1
-    fi
-
-    # Return to original directory
-    cd "$current_dir"
-}
-
 # Cleanup
 cleanup() {
     echo "Cleaning up..."
@@ -147,7 +113,6 @@ main() {
     install_dependencies
     install_blas_lapack
     install_hpl
-    setup_hpl
     cleanup
 
     echo "Installation completed!"
