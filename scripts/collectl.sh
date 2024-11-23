@@ -6,14 +6,38 @@
 # Script to manage Collectl for HPC benchmarking sessions
 # Usage:
 #   ./collectl_manager.sh install - to install Collectl
-#   ./collectl_manager.sh start - to start Collectl in the background
+#   ./collectl_manager.sh start [-o|--output <file>] - to start Collectl in the background
 #   ./collectl_manager.sh stop - to stop Collectl gracefully
 # -----------------------------------------------------------------------------
 
 set -e  # Exit on any error
 
 COMMAND=$1
-OUTPUT_FILE="$(pwd)/collectl_results_$(date +%Y%m%d_%H%M%S).lexpr"
+OUTPUT_FILE=""
+
+# Parse arguments for the start command
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -o|--output)
+            OUTPUT_FILE="$2"
+            shift 2
+            ;;
+        start|install|stop)
+            COMMAND=$1
+            shift
+            ;;
+        *)
+            echo "Unknown argument: $1"
+            echo "Usage: $0 {install|start [-o|--output <file>]|stop}"
+            exit 1
+            ;;
+    esac
+done
+
+# Default output file if not specified
+if [[ "$COMMAND" == "start" && -z "$OUTPUT_FILE" ]]; then
+    OUTPUT_FILE="$(pwd)/collectl_results_$(date +%Y%m%d_%H%M%S).lexpr"
+fi
 
 install_collectl() {
     echo "Checking if Collectl is installed..."
@@ -43,13 +67,14 @@ start_collectl() {
         exit 1
     fi
 
-    # Start Collectl in the background with custom options and save results to a file
-    collectl -oT -scCdmn --export lexpr > "$OUTPUT_FILE" &
+    # Start Collectl in the background using nohup
+    nohup collectl -oT -scCdmn --export lexpr > "$OUTPUT_FILE" 2>&1 &
     COLLECTL_PID=$!
     echo $COLLECTL_PID > /tmp/collectl_pid.txt
 
     echo "Collectl is now running in the background with PID $COLLECTL_PID"
     echo "Results are being saved to $OUTPUT_FILE"
+    exit 0
 }
 
 stop_collectl() {
@@ -80,7 +105,7 @@ case $COMMAND in
         stop_collectl
         ;;
     *)
-        echo "Usage: $0 {install|start|stop}"
+        echo "Usage: $0 {install|start [-o|--output <file>]|stop}"
         exit 1
         ;;
 esac

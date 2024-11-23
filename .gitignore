@@ -16,3 +16,4 @@ lapack-3.12.0
 *.tar.gz
 collectl_*
 hpl_configs
+results
