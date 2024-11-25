@@ -48,17 +48,19 @@ def install_collectl():
     print("Collectl installation completed.")
 
 
-def start_collectl():
+def start_collectl(unique_id, output_file=None):
     """Start Collectl for monitoring."""
-    print("Starting Collectl monitoring...")
-    run_command("./collectl.sh start")
+    print(f"Starting Collectl monitoring with ID: {unique_id}...")
+    command = f"./collectl_manager.sh start -id {unique_id}"
+    if output_file:
+        command += f" -o {output_file}"
+    run_command(command)
     print("Collectl started.")
 
-
-def stop_collectl():
+def stop_collectl(unique_id):
     """Stop Collectl monitoring."""
-    print("Stopping Collectl monitoring...")
-    run_command("./collectl.sh stop")
+    print(f"Stopping Collectl monitoring with ID: {unique_id}...")
+    run_command(f"./collectl_manager.sh stop -id {unique_id}")
     print("Collectl stopped.")
 
 
@@ -111,12 +113,17 @@ def run_hpl_single(config_file, result_dir, instance_id=None):
         config_basename = os.path.basename(config_file)
         result_file = os.path.abspath(os.path.join(result_dir, config_basename.replace(".dat", ".result")))
 
+        # Launch collect 
+        start_collectl(unique_id=instance_id, output_file=os.path.join(result_dir, f"collectl_{config_basename}.log"))
         # Run HPL benchmark
         command = f"mpirun -np {get_cpu_count_from_filename(config_file)} --use-hwthread-cpus --allow-run-as-root ./xhpl > {result_file} 2>&1"
         print(f"Executing command: {command}")
         run_command(command, cwd=instance_dir)
 
         print(f"HPL result saved to: {result_file}")
+
+        # Stop collectl
+        stop_collectl(unique_id=instance_id)
 
     except Exception as e:
         print(f"Error during HPL execution for {config_file}: {e}")
@@ -132,6 +139,12 @@ def run_hpl_single(config_file, result_dir, instance_id=None):
 
 def run_hpl_parallel(config_files, result_dir):
     """Run multiple HPL instances in parallel."""
+
+    print("---------------Running HPL pallel benchmarks---------------")
+    print(f"Config files: {config_files}")
+    print(f"Result directory: {result_dir}")
+    print("-----------------------------------------------------------")
+
     processes = []
     for instance_id, config_file in enumerate(config_files, start=1):
         process = Process(target=run_hpl_single, args=(config_file, result_dir, instance_id))
@@ -140,12 +153,23 @@ def run_hpl_parallel(config_files, result_dir):
 
     for process in processes:
         process.join()
+        if process.exitcode != 0:
+            print(f"ERROR: Process {process.pid} failed with exit code {process.exitcode}")
+
+
+    print("Parallel HPL benchmarks completed.")
 
 
 # Benchmark Execution
 def run_cooperative_benchmarks():
     """Run HPL benchmarks for cooperative configurations."""
-    print("Running cooperative benchmarks...")
+
+
+    print("---------------Running HPL cooperative benchmarks---------------")
+    print(f"Config directory: {COOP_CONFIG_DIR}")
+    print(f"Result directory: {RESULT_DIR}")
+    print("----------------------------------------------------------------")
+
     for config_file in Path(COOP_CONFIG_DIR).glob("*.dat"):
         run_hpl_single(str(config_file), os.path.join(RESULT_DIR, "cooperative"))
     print("Cooperative benchmarks completed.")
@@ -178,17 +202,12 @@ def main():
         # Step 3: Generate HPL configurations
         generate_configs()
 
-        # Step 4: Start Collectl monitoring
-        start_collectl()
 
         # Step 5: Run benchmarks
         run_cooperative_benchmarks()
         run_competitive_benchmarks()
     finally:
-        # Step 6: Stop Collectl after all benchmarks are done
-        stop_collectl()
-
-    print("All benchmarks completed. Results are saved in the 'results' directory.")
+        print("All benchmarks completed. Results are saved in the 'results' directory.")
 
 
 if __name__ == "__main__":

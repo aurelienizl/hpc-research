@@ -90,6 +90,69 @@ start_collectl() {
         exit 1
     fi
 
+    # Start Collectl in the background using collectl API
+    nohup collectl_control --start --output "$OUTPUT_FILE" --format lexpr &
+    COLLECTL_PID=$!
+    echo $COLLECTL_PID > "$PID_FILE"
+
+    echo "Collectl is now running with ID '$ID' and PID $COLLECTL_PID."
+    echo "Results are being saved to $OUTPUT_FILE"
+}
+
+stop_collectl() {
+    if [[ -z "$ID" ]]; then
+        echo "Error: ID is required to stop Collectl."
+        echo "Usage: $0 stop -id <id>"
+        exit 1
+    fi
+
+    PID_FILE="$PID_DIR/$ID.pid"
+
+    if [[ -f "$PID_FILE" ]]; then
+        COLLECTL_PID=$(cat "$PID_FILE")
+        if ps -p $COLLECTL_PID > /dev/null; then
+            echo "Stopping Collectl with ID '$ID' and PID $COLLECTL_PID..."
+            # Stop Collectl using collectl API
+            collectl_control --stop
+            rm "$PID_FILE"
+            echo "Collectl with ID '$ID' has been stopped."
+        else
+            echo "Error: Process with ID '$ID' is not running."
+            rm "$PID_FILE"
+            exit -1
+        fi
+    else
+        echo "Error: No Collectl process found with ID '$ID'."
+        exit 1
+    fi
+}
+        echo "Collectl is already installed."
+    fi
+}
+
+start_collectl() {
+    if [[ -z "$ID" ]]; then
+        echo "Error: ID is required to start Collectl."
+        echo "Usage: $0 start -id <id> [-o|--output <file>]"
+        exit 1
+    fi
+
+    PID_FILE="$PID_DIR/$ID.pid"
+
+    # Check if ID is already in use
+    if [[ -f "$PID_FILE" ]]; then
+        echo "Error: ID '$ID' is already in use. Please use a different ID."
+        exit -1
+    fi
+
+    echo "Starting Collectl with ID '$ID'..."
+
+    # Check if Collectl is installed
+    if ! command -v collectl &> /dev/null; then
+        echo "Collectl is not installed. Run '$0 install' to install it."
+        exit 1
+    fi
+
     # Start Collectl in the background
     nohup collectl -oT -scCdmn --export lexpr > "$OUTPUT_FILE" 2>&1 &
     COLLECTL_PID=$!
