@@ -51,7 +51,7 @@ def install_collectl():
 def start_collectl(unique_id, output_file=None):
     """Start Collectl for monitoring."""
     print(f"Starting Collectl monitoring with ID: {unique_id}...")
-    command = f"./collectl_manager.sh start -id {unique_id}"
+    command = f"./collectl.sh start -id {unique_id}"
     if output_file:
         command += f" -o {output_file}"
     run_command(command)
@@ -60,7 +60,7 @@ def start_collectl(unique_id, output_file=None):
 def stop_collectl(unique_id):
     """Stop Collectl monitoring."""
     print(f"Stopping Collectl monitoring with ID: {unique_id}...")
-    run_command(f"./collectl_manager.sh stop -id {unique_id}")
+    run_command(f"./collectl.sh stop -id {unique_id}")
     print("Collectl stopped.")
 
 
