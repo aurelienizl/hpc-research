@@ -1,5 +1,6 @@
 from collectl.collectl_interface import CollectlManager
 from hpl.hpl_config import HPLBenchmarkConfig
+from hpl.hpl_interface import HPLInstance
 from log.log_interface import ShellLogger
 
 if __name__ == "__main__":
@@ -24,4 +25,7 @@ if __name__ == "__main__":
     assert manager.is_collectl_running("test_id") == False
 
     hpl_config.generate_configs()
+    
+    instance = HPLInstance("hpl_configs/cooperative/hpl_1cpu.dat", 1)
 
+    instance.run()
