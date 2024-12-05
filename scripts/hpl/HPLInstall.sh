@@ -12,9 +12,6 @@
 # 5. Cleans up temporary files
 # -----------------------------------------------------------------------------
 
-
-#!/bin/bash
-
 # Script to install HPL and dependencies
 set -e  # Exit on any error
 
@@ -23,7 +20,30 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-echo "Starting HPL installation script..."
+# Function to check if a package is installed
+package_installed() {
+    dpkg -s "$1" >/dev/null 2>&1
+}
+
+# Function to check if HPL is already installed
+is_hpl_installed() {
+    [ -f "/usr/local/hpl/bin/xhpl" ] && echo "HPL binary found." && return 0
+    return 1
+}
+
+# Check if all required dependencies are installed
+check_dependencies() {
+    echo "Checking for required dependencies..."
+    local dependencies=("build-essential" "gfortran" "wget" "make" "openmpi-bin" "libopenmpi-dev" "libblas-dev" "liblapack-dev" "python3-psutil")
+    for package in "${dependencies[@]}"; do
+        if ! package_installed "$package"; then
+            echo "Missing dependency: $package"
+            return 1
+        fi
+    done
+    echo "All dependencies are installed."
+    return 0
+}
 
 # Install required packages
 install_dependencies() {
@@ -69,7 +89,7 @@ install_hpl() {
         CC=mpicc \
         --prefix=/usr/local/hpl
 
-    make -j${nbproc}
+    make -j$(nproc)
     sudo make install
     cd ..
 
@@ -86,6 +106,13 @@ cleanup() {
 
 # Main installation process
 main() {
+    echo "Checking if HPL is already installed..."
+    if is_hpl_installed && check_dependencies; then
+        echo "HPL and all dependencies are already installed."
+        exit 0
+    fi
+
+    echo "Installing HPL and dependencies..."
     install_dependencies
     install_hpl
     cleanup

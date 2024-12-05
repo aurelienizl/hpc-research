@@ -19,7 +19,6 @@ ID=""
 OUTPUT_FILE=""
 CUSTOM_COMMAND="-oT -scCdmn --export lexpr"  # Default Collectl command
 PID_DIR="/tmp/collectl_pids"  # Directory for managing process IDs
-LOG_SCRIPT="log/log.sh"  # Path to the log script
 
 # Function to parse arguments
 parse_arguments() {
@@ -42,37 +41,71 @@ parse_arguments() {
                 shift
                 ;;
             *)
-                "$LOG_SCRIPT" error "Unknown argument: $1"
-                "$LOG_SCRIPT" info "Usage: $0 {install|start -id <id> [-o|--output <file>] [-cmd|--command <command>]|stop -id <id>}"
+                echo "Error: Unknown argument: $1"
+                echo "Usage: $0 {install|start -id <id> [-o|--output <file>] [-cmd|--command <command>]|stop -id <id>}"
                 exit 1
                 ;;
         esac
     done
 }
 
-# Function to install Collectl
 install_collectl() {
-    "$LOG_SCRIPT" info "Checking if Collectl is installed..."
-    if ! command -v collectl &> /dev/null; then
-        "$LOG_SCRIPT" info "Collectl is not installed. Installing now..."
-        if command -v apt-get &> /dev/null; then
-            sudo apt-get update
-            sudo apt-get install -y collectl
-            "$LOG_SCRIPT" info "Collectl installation completed."
-        else
-            "$LOG_SCRIPT" error "Unsupported package manager"
-            exit 1
-        fi
+    echo "Checking if Collectl is installed..."
+
+    # Check if collectl is already installed
+    if command -v collectl &> /dev/null; then
+        echo "Collectl is already installed."
     else
-        "$LOG_SCRIPT" info "Collectl is already installed."
+        # Collectl not found, proceed with installation
+        echo "Collectl not found. Installing Collectl..."
+
+        # Download Collectl 4.3.1 tar.gz
+        echo "Downloading Collectl 4.3.1 source tarball..."
+        wget https://kumisystems.dl.sourceforge.net/project/collectl/collectl/collectl-4.3.1/collectl-4.3.1.src.tar.gz -O /tmp/collectl-4.3.1.src.tar.gz
+
+        # Check if download was successful
+        if [ $? -ne 0 ]; then
+            echo "Error: Failed to download Collectl tarball."
+            return 1
+        fi
+
+        # Extract the tarball
+        echo "Extracting Collectl 4.3.1 tarball..."
+        tar -xvzf /tmp/collectl-4.3.1.src.tar.gz -C /tmp
+
+        # Check if extraction was successful
+        if [ $? -ne 0 ]; then
+            echo "Error: Failed to extract Collectl tarball."
+            return 1
+        fi
+
+        # Change to the Collectl source directory
+        cd /tmp/collectl-4.3.1.src/collectl-4.3.1
+
+        # Run the installation
+        echo "Running Collectl installation..."
+        sudo bash INSTALL
+
+        # Check if installation was successful
+        if [ $? -ne 0 ]; then
+            echo "Error: Collectl installation failed."
+            return 1
+        fi
+
+        # Clean up downloaded and extracted files
+        echo "Cleaning up installation files..."
+        rm -rf /tmp/collectl-4.3.1.src.tar.gz
+        rm -rf /tmp/collectl-4.3.1.src
+
+        echo "Collectl installation completed successfully."
     fi
 }
 
 # Function to start Collectl
 start_collectl() {
     if [[ -z "$ID" ]]; then
-        "$LOG_SCRIPT" error "ID is required to start Collectl."
-        "$LOG_SCRIPT" info "Usage: $0 start -id <id> [-o|--output <file>] [-cmd|--command <command>]"
+        echo "Error: ID is required to start Collectl."
+        echo "Usage: $0 start -id <id> [-o|--output <file>] [-cmd|--command <command>]"
         exit 1
     fi
 
@@ -80,7 +113,7 @@ start_collectl() {
 
     # Check if ID is already in use
     if [[ -f "$PID_FILE" ]]; then
-        "$LOG_SCRIPT" error "ID '$ID' is already in use. Please use a different ID."
+        echo "Error: ID '$ID' is already in use. Please use a different ID."
         exit 1
     fi
 
@@ -89,11 +122,11 @@ start_collectl() {
         OUTPUT_FILE="$(pwd)/collectl_results_${ID}_$(date +%Y%m%d_%H%M%S).lexpr"
     fi
 
-    "$LOG_SCRIPT" info "Starting Collectl with ID '$ID'..."
+    echo "Starting Collectl with ID '$ID'..."
 
     # Check if Collectl is installed
     if ! command -v collectl &> /dev/null; then
-        "$LOG_SCRIPT" error "Collectl is not installed. Run '$0 install' to install it."
+        echo "Error: Collectl is not installed. Run '$0 install' to install it."
         exit 1
     fi
 
@@ -103,14 +136,14 @@ start_collectl() {
     COLLECTL_PID=$!
     echo $COLLECTL_PID > "$PID_FILE"
 
-    "$LOG_SCRIPT" info "Collectl is now running with ID '$ID' and PID $COLLECTL_PID. Results are being saved to $OUTPUT_FILE"
+    echo "Collectl is now running with ID '$ID' and PID $COLLECTL_PID. Results are being saved to $OUTPUT_FILE"
 }
 
 # Function to stop Collectl
 stop_collectl() {
     if [[ -z "$ID" ]]; then
-        "$LOG_SCRIPT" error "ID is required to stop Collectl."
-        "$LOG_SCRIPT" info "Usage: $0 stop -id <id>"
+        echo "Error: ID is required to stop Collectl."
+        echo "Usage: $0 stop -id <id>"
         exit 1
     fi
 
@@ -119,17 +152,17 @@ stop_collectl() {
     if [[ -f "$PID_FILE" ]]; then
         COLLECTL_PID=$(cat "$PID_FILE")
         if ps -p $COLLECTL_PID > /dev/null; then
-            "$LOG_SCRIPT" info "Stopping Collectl with ID '$ID' and PID $COLLECTL_PID..."
+            echo "Stopping Collectl with ID '$ID' and PID $COLLECTL_PID..."
             kill $COLLECTL_PID
             rm "$PID_FILE"
-            "$LOG_SCRIPT" info "Collectl with ID '$ID' has been stopped."
+            echo "Collectl with ID '$ID' has been stopped."
         else
-            "$LOG_SCRIPT" error "Process with ID '$ID' is not running."
+            echo "Error: Process with ID '$ID' is not running."
             rm "$PID_FILE"
             exit 1
         fi
     else
-        "$LOG_SCRIPT" error "No Collectl process found with ID '$ID'."
+        echo "Error: No Collectl process found with ID '$ID'."
         exit 1
     fi
 }
@@ -148,7 +181,7 @@ case $COMMAND in
         stop_collectl
         ;;
     *)
-        "$LOG_SCRIPT" info "Usage: $0 {install|start -id <id> [-o|--output <file>] [-cmd|--command <command>]|stop -id <id>}"
+        echo "Usage: $0 {install|start -id <id> [-o|--output <file>] [-cmd|--command <command>]|stop -id <id>}"
         exit 1
         ;;
 esac

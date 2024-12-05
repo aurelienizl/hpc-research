@@ -1,20 +1,27 @@
 import subprocess
+import os
+from typing import Optional
 
 
-class ShellLogger:
+class LogInterface:
     """
     A Python class to interact with the log.sh shell script for logging.
     """
-    def __init__(self, script_path: str = "./log/log.sh", verbose: bool = False):
+
+    SCRIPT_PATH = os.path.join(os.path.dirname(__file__), "Log.sh")
+
+
+    def __init__(self, verbose: bool = False, log_file: Optional[str] = None):
         """
         Initializes the ShellLogger with the path to the shell script and verbosity control.
 
         Args:
             script_path (str): Path to the shell script for logging.
             verbose (bool): If True, logs are displayed in real-time.
+            log_file (str): Optional log file name. Defaults to log.txt.
         """
-        self.script_path = script_path
         self.verbose = verbose
+        self.log_file = log_file or "log.txt"
 
     def log(self, level: str, message: str):
         """
@@ -32,13 +39,13 @@ class ShellLogger:
             # If verbose is enabled, do not capture stdout and stderr
             if self.verbose:
                 subprocess.run(
-                    [self.script_path, level, message],
+                    [LogInterface.SCRIPT_PATH, level, message, self.log_file],
                     check=True
                 )
             else:
                 # Capture stdout and stderr when verbose is disabled
                 subprocess.run(
-                    [self.script_path, level, message],
+                    [LogInterface.SCRIPT_PATH, level, message, self.log_file],
                     check=True,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
@@ -48,7 +55,7 @@ class ShellLogger:
         except subprocess.CalledProcessError as e:
             print(f"Failed to log message: {e.stderr.strip()}")
         except FileNotFoundError:
-            print(f"Shell script not found at {self.script_path}")
+            print(f"Shell script not found at {LogInterface.SCRIPT_PATH}")
 
     def info(self, message: str):
         """Logs an info-level message."""

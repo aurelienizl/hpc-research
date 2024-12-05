@@ -1,27 +1,26 @@
 import os
 import math
-from log.log_interface import ShellLogger  # Import the ShellLogger class for logging
 
 
-class HPLBenchmarkConfig:
+class HPLConfig:
     """
     A class to generate HPL benchmark configurations for cooperative and competitive setups.
     """
 
-    def __init__(self, output_dir: str = "hpl_configs", logger: ShellLogger = None):
+     
+
+    def __init__(self, output_dir: str = "HPLConfigurations"):
         """
         Initialize the HPLBenchmarkConfig class.
 
         Args:
             output_dir (str): Base directory to save the generated configurations.
-            logger (ShellLogger): Logger instance for logging messages.
         """
         self.output_dir = output_dir
-        self.logger = logger or ShellLogger()
-        self.logger.info("HPLBenchmarkConfig initialized.")
+        print("HPLBenchmarkConfig initialized.")
         self.total_cpus = self._get_total_cpus()
         self.total_memory, self.available_memory, self.usable_memory = self._get_memory_info()
-        self.logger.info(f"System details: {self.total_cpus} CPUs, {self.usable_memory} MB usable memory.")
+        print(f"System details: {self.total_cpus} CPUs, {self.usable_memory} MB usable memory.")
 
     def _get_total_cpus(self):
         """
@@ -76,7 +75,7 @@ class HPLBenchmarkConfig:
 
         hpl_template = f"""HPLinpack benchmark input file
 Innovative Computing Laboratory, University of Tennessee
-HPL.out      output file name (if any) 
+HPL.out      output file name (if any)
 6            device out (6=stdout,7=stderr,file)
 1            # of problems sizes (N)
 {n_value}    Ns
@@ -114,13 +113,13 @@ HPL.out      output file name (if any)
         os.makedirs(output_dir, exist_ok=True)
         with open(file_path, "w") as f:
             f.write(hpl_template)
-        self.logger.info(f"HPL file generated: {file_path}")
+        print(f"HPL file generated: {file_path}")
 
     def create_cooperative_configs(self):
         """
         Create HPL configurations for cooperative benchmarking.
         """
-        self.logger.info("Generating cooperative benchmark configurations...")
+        print("Generating cooperative benchmark configurations...")
         cpu_counts = []
         cpu = self.total_cpus
         while cpu >= 1:
@@ -135,7 +134,7 @@ HPL.out      output file name (if any)
         """
         Create HPL configurations for competitive benchmarking.
         """
-        self.logger.info("Generating competitive benchmark configurations...")
+        print("Generating competitive benchmark configurations...")
         cpu = self.total_cpus
         instances = []
 
@@ -155,15 +154,8 @@ HPL.out      output file name (if any)
         """
         Generate both cooperative and competitive HPL configurations.
         """
-        self.logger.info("Starting HPL configuration generation...")
+        print("Starting HPL configuration generation...")
         self.create_cooperative_configs()
         self.create_competitive_configs()
-        self.logger.info("All configurations have been generated.")
-        self.logger.info(f"Configurations saved in {self.output_dir}")
-
-
-# Example usage
-if __name__ == "__main__":
-    logger = ShellLogger(script_path="./log/log.sh")
-    hpl_config = HPLBenchmarkConfig(output_dir="hpl_configs", logger=logger)
-    hpl_config.generate_configs()
+        print("All configurations have been generated.")
+        print(f"Configurations saved in {self.output_dir}")

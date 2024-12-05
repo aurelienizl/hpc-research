@@ -6,7 +6,7 @@
 # Log script for HPC benchmarking sessions
 # This script handles logging for multiple scripts in a multithreaded environment
 # Usage:
-#   ./log.sh <level> <message>
+#   ./log.sh <level> <message> [<log_file>]
 # Levels:
 #   info    - Information messages
 #   warning - Warning messages
@@ -14,11 +14,12 @@
 # -----------------------------------------------------------------------------
 
 # Global Variables
-LOG_FILE="hpl_benchmark.log"  # Default log file
+DEFAULT_LOG_FILE="log.txt"  # Default log file
 LOG_LEVELS=("info" "warning" "error")  # Supported log levels
 
 # ANSI color codes
 RESET="\e[0m"
+BLUE="\e[34m"
 RED="\e[31m"
 YELLOW="\e[33m"
 
@@ -26,6 +27,7 @@ YELLOW="\e[33m"
 log_message() {
     local level="$1"
     local message="$2"
+    local log_file="${3:-$DEFAULT_LOG_FILE}"  # Use the provided log file or default to log.txt
     local timestamp="$(date +"%Y-%m-%d %H:%M:%S")"
     local pid="$$"
     local thread_id="$(get_thread_id)"
@@ -40,7 +42,7 @@ log_message() {
     local log_entry="[$timestamp] [$level] [PID: $pid] [THREAD: $thread_id] $message"
 
     # Append to the log file
-    echo "$log_entry" >> "$LOG_FILE"
+    echo "$log_entry" >> "$log_file"
 
     # Print the log message to stdout with appropriate color
     case "$level" in
@@ -51,7 +53,7 @@ log_message() {
             echo -e "${YELLOW}$log_entry${RESET}"
             ;;
         *)
-            echo "$log_entry"
+            echo -e "${BLUE}$log_entry${RESET}"
             ;;
     esac
 }
@@ -64,9 +66,9 @@ get_thread_id() {
 
 # Main script logic
 if [[ $# -lt 2 ]]; then
-    echo "Usage: $0 <level> <message>"
+    echo "Usage: $0 <level> <message> [<log_file>]"
     exit 1
 fi
 
 # Log the message
-log_message "$1" "$2"
+log_message "$1" "$2" "$3"
