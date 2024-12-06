@@ -59,9 +59,16 @@ install_collectl() {
         # Collectl not found, proceed with installation
         echo "Collectl not found. Installing Collectl..."
 
-        # Download Collectl 4.3.1 tar.gz
+        # Download Collectl 4.3.1 tar.gz using curl
         echo "Downloading Collectl 4.3.1 source tarball..."
-        wget https://kumisystems.dl.sourceforge.net/project/collectl/collectl/collectl-4.3.1/collectl-4.3.1.src.tar.gz -O /tmp/collectl-4.3.1.src.tar.gz
+
+        # Remove if /tmp/collectl-4.3.1.src.tar.gz already exists
+        if [ -f /tmp/collectl-4.3.1.src.tar.gz ]; then
+            sudo rm -f /tmp/collectl-4.3.1.src.tar.gz
+        fi
+
+        # Download with curl
+        sudo curl -L https://kumisystems.dl.sourceforge.net/project/collectl/collectl/collectl-4.3.1/collectl-4.3.1.src.tar.gz -o /tmp/collectl-4.3.1.src.tar.gz
 
         # Check if download was successful
         if [ $? -ne 0 ]; then
@@ -71,7 +78,7 @@ install_collectl() {
 
         # Extract the tarball
         echo "Extracting Collectl 4.3.1 tarball..."
-        tar -xvzf /tmp/collectl-4.3.1.src.tar.gz -C /tmp
+        sudo tar -xvzf /tmp/collectl-4.3.1.src.tar.gz -C /tmp
 
         # Check if extraction was successful
         if [ $? -ne 0 ]; then
@@ -80,7 +87,7 @@ install_collectl() {
         fi
 
         # Change to the Collectl source directory
-        cd /tmp/collectl-4.3.1.src/collectl-4.3.1
+        cd /tmp/collectl-4.3.1/
 
         # Run the installation
         echo "Running Collectl installation..."
@@ -94,8 +101,8 @@ install_collectl() {
 
         # Clean up downloaded and extracted files
         echo "Cleaning up installation files..."
-        rm -rf /tmp/collectl-4.3.1.src.tar.gz
-        rm -rf /tmp/collectl-4.3.1.src
+        sudo rm -rf /tmp/collectl-4.3.1.src.tar.gz
+        sudo rm -rf /tmp/collectl-4.3.1.src
 
         echo "Collectl installation completed successfully."
     fi
@@ -131,8 +138,8 @@ start_collectl() {
     fi
 
     # Start Collectl in the background
-    mkdir -p "$PID_DIR"
-    nohup collectl $CUSTOM_COMMAND > "$OUTPUT_FILE" 2>&1 &
+    sudo mkdir -p "$PID_DIR"
+    sudo nohup collectl $CUSTOM_COMMAND > "$OUTPUT_FILE" 2>&1 &
     COLLECTL_PID=$!
     echo $COLLECTL_PID > "$PID_FILE"
 
@@ -153,12 +160,12 @@ stop_collectl() {
         COLLECTL_PID=$(cat "$PID_FILE")
         if ps -p $COLLECTL_PID > /dev/null; then
             echo "Stopping Collectl with ID '$ID' and PID $COLLECTL_PID..."
-            kill $COLLECTL_PID
-            rm "$PID_FILE"
+            sudo kill $COLLECTL_PID
+            sudo rm "$PID_FILE"
             echo "Collectl with ID '$ID' has been stopped."
         else
             echo "Error: Process with ID '$ID' is not running."
-            rm "$PID_FILE"
+            sudo rm "$PID_FILE"
             exit 1
         fi
     else
