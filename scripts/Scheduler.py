@@ -118,4 +118,3 @@ if __name__ == "__main__":
     scheduler = Scheduler()
     scheduler.install_dependencies()
     scheduler.setup_environment()
-    scheduler.run_competitive_instance(4)
