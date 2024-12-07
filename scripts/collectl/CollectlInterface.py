@@ -12,7 +12,7 @@ class CollectlInterface:
     def __init__(self):
         print("CollectlManager initialized.")
 
-    def run_command(self, command: str, timeout: int = 60) -> subprocess.CompletedProcess:
+    def _run_command(self, command: str, timeout: int = 60) -> subprocess.CompletedProcess:
         """
         Helper method to run shell commands and handle errors.
         """
@@ -34,7 +34,7 @@ class CollectlInterface:
         """
         try:
             print("Installing Collectl.")
-            result = self.run_command(f"{CollectlInterface.SCRIPT_PATH} install", timeout=120)
+            result = self._run_command(f"{CollectlInterface.SCRIPT_PATH} install", timeout=120)
             print("Collectl installation completed.")
             return result.stdout
         except Exception as e:
@@ -57,7 +57,7 @@ class CollectlInterface:
 
         try:
             print(f"Starting Collectl with ID: {id}")
-            result = self.run_command(command)
+            result = self._run_command(command)
             print(f"Collectl started with ID: {id}")
             return result.stdout
         except Exception as e:
@@ -75,7 +75,7 @@ class CollectlInterface:
         command = f"{CollectlInterface.SCRIPT_PATH} stop -id {id}"
         try:
             print(f"Stopping Collectl with ID: {id}")
-            result = self.run_command(command)
+            result = self._run_command(command)
             print(f"Collectl stopped with ID: {id}")
             return result.stdout
         except Exception as e:

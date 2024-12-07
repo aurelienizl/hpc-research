@@ -9,7 +9,7 @@ from scheduler import Scheduler
 
 # Configuration
 CONFIGURATIONS_DIR = "HPLConfigurations"
-API_HOST = '0.0.0.0'
+API_HOST = '127.0.0.1'
 API_PORT = 5000
 
 
@@ -51,13 +51,33 @@ def create_app(task_manager: TaskManager) -> Flask:
 
         task = {
             "config_type": config_type,
-            "cpu_count": cpu_count
+            "cpu_count": cpu_count,
+            "task_id": None
         }
 
-        task_manager.enqueue_task(task)
-        return jsonify({"status": "Task queued successfully."}), 200
+        task_id = task_manager.enqueue_task(task)
+        return jsonify({"task_id": task_id}), 200
 
-    @app.route('/status', methods=['GET'])
+    @app.route('/tasks/<int:task_id>', methods=['GET'])
+    def task_status(task_id: int):
+        """
+        Endpoint to check the status of a specific task.
+
+        Args:
+            task_id (int): The task ID to check.
+
+        Returns:
+            - Task details if the task is found.
+            - Error message if the task is not found.
+        """
+        task_status = task_manager.get_task_status(task_id)
+
+        if task_status:
+            return jsonify({"task_id": task_id, "status": task_status}), 200
+        else:
+            return jsonify({"error": f"Task with ID {task_id} not found."}), 404
+
+    @app.route('/tasks', methods=['GET'])
     def status():
         """
         Endpoint to check the scheduler's status.
@@ -72,7 +92,6 @@ def create_app(task_manager: TaskManager) -> Flask:
             "queue_size": queue_size,
             "active_workers": active_workers
         }), 200
-
     return app
 
 

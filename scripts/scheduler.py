@@ -1,17 +1,14 @@
 # scheduler.py
 
-
 import sys
 from pathlib import Path
 from typing import List
 from multiprocessing import Process
 
-
 from hpl.HPLConfig import HPLConfig
 from hpl.HPLInstance import HPLInstance
 from collectl.CollectlInterface import CollectlInterface
 from log.LogInterface import LogInterface
-
 
 class Scheduler:
     """
