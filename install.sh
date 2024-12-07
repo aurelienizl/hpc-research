@@ -10,6 +10,8 @@ if [ -z "$(which apt-get)" ]
   exit
 fi
 
+sudo bash clean.sh
+
 # Update package list and upgrade all packages
 sudo apt-get update && sudo apt-get upgrade -y
 
