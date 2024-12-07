@@ -1,18 +1,17 @@
-import os
-import subprocess
+
 from pathlib import Path
+from typing import Optional, List
+
 from hpl.HPLConfig import HPLConfig
 from hpl.HPLInstance import HPLInstance
+
 
 class HPLInterface:
     """
     Interface to manage HPL benchmark tasks, including configuration generation, installation, and execution.
     """
 
-    SCRIPT_PATH = os.path.join(os.path.dirname(__file__), "HPLInstall.sh")
-
-
-    def __init__(self, config_output_dir="Configurations"):
+    def __init__(self, config_output_dir: str = "Configurations"):
         """
         Initialize the HPLInterface.
 
@@ -23,22 +22,7 @@ class HPLInterface:
         self.hpl_config = HPLConfig(output_dir=self.config_output_dir)
         print("HPLInterface initialized.")
 
-    @staticmethod
-    def install_hpl():
-        """
-        Install HPL and its dependencies using a script.
-        """
-        print("Starting HPL installation...")
-        if not Path(HPLInterface.SCRIPT_PATH).exists():
-            raise FileNotFoundError(f"Installation script not found: {HPLInterface.SCRIPT_PATH}")
-        try:
-            subprocess.run(["bash", HPLInterface.SCRIPT_PATH], check=True)
-            print("HPL installation completed successfully.")
-        except subprocess.CalledProcessError as e:
-            print(f"Error during HPL installation: {e}")
-            raise
-
-    def generate_hpl_configs(self, cooperative=True, competitive=True):
+    def generate_hpl_configs(self, cooperative: bool = True, competitive: bool = True):
         """
         Generate HPL configurations for benchmarking.
 
@@ -53,28 +37,31 @@ class HPLInterface:
             self.hpl_config.create_competitive_configs()
         print(f"HPL configurations generated in {self.config_output_dir}.")
 
-    def setup_hpl_instance(self, config_path, process_count, instance_id):
+    def setup_hpl_instance(self, instance_type: str, config_path: str, cpu_count: int, instance_id: int) -> HPLInstance:
         """
         Set up an HPL instance.
 
         Args:
+            instance_type (str): Type of the HPL instance ('cooperative' or 'competitive').
             config_path (str): Path to the HPL configuration file.
-            process_count (int): Number of processes to use for the benchmark.
+            cpu_count (int): Number of processes to use for the benchmark.
             instance_id (int): Unique identifier for the instance.
 
         Returns:
             HPLInstance: Configured HPLInstance object.
         """
-        print(f"Setting up HPL instance with ID {instance_id}...")
         try:
-            instance = HPLInstance(config_path=config_path, process_count=process_count, instance_id=instance_id)
-            print(f"HPL instance {instance_id} set up successfully.")
+            instance = HPLInstance(
+                instance_type=instance_type,
+                config_path=config_path,
+                process_count=cpu_count,
+                instance_id=instance_id
+            )
             return instance
         except Exception as e:
-            print(f"Error setting up HPL instance {instance_id}: {e}")
             raise
 
-    def launch_hpl_instance(self, instance):
+    def launch_hpl_instance(self, instance: HPLInstance):
         """
         Launch an HPL instance.
 
@@ -84,9 +71,29 @@ class HPLInterface:
         print(f"Launching HPL instance with ID {instance.instance_id}...")
         try:
             instance.run()
-            print(f"HPL instance {instance.instance_id} completed successfully.")
+            print(f"HPL instance {instance.instance_id} launched successfully.")
         except RuntimeError as e:
-            print(f"Error during HPL benchmark for instance {instance.instance_id}: {e}")
             raise
 
+    def get_hpl_config(self, config_type: str, cpu_count: int) -> List[str]:
+        """
+        Retrieve the configuration file paths based on the specified type and CPU count.
 
+        Args:
+            config_type (str): Type of configuration ('cooperative' or 'competitive').
+            cpu_count (int): Number of CPUs for the configuration.
+
+        Returns:
+            List[str]: List of configuration file paths. Empty list if no configurations found.
+        """
+        print(f"Retrieving HPL configurations for type '{config_type}' and CPU count {cpu_count}...")
+        try:
+            config_paths = self.hpl_config.get_config_paths(config_type, cpu_count)
+            if config_paths:
+                print(f"Found {len(config_paths)} configuration(s) for type '{config_type}' with {cpu_count} CPUs.")
+            else:
+                print(f"No configurations found for type '{config_type}' with {cpu_count} CPUs.")
+            return config_paths
+        except Exception as e:
+            print(f"Error retrieving HPL configurations: {e}")
+            return []

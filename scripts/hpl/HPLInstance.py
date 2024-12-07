@@ -10,17 +10,20 @@ class HPLInstance:
     Each instance is assigned a unique identifier to ensure separate directories.
     """
 
-    _active_instances = set()
-
-    def __init__(self, config_path: str, process_count: int, instance_id: int):
+    def __init__(self, instance_type: str, config_path: str, process_count: int, instance_id: int):
         """
         Initialize an HPL instance with a unique identifier.
 
         Args:
+            instance_type (str): Type of the HPL instance (e.g., 'cooperative' or 'competitive').
             config_path (str): Path to the HPL configuration file (HPL.dat).
             process_count (int): Number of processes to run with mpirun.
             instance_id (int): Unique identifier for the HPL instance.
         """
+        self.instance_type = instance_type
+
+        print(f"Initializing HPL instance with ID {instance_id}")
+
         self.config_path = Path(config_path)
         if not self.config_path.exists():
             raise FileNotFoundError(f"Configuration file not found: {config_path}")
@@ -33,11 +36,6 @@ class HPLInstance:
         self.working_dir = Path(f"/tmp/hpl_instance/{self.instance_id}")
         self.hpl_binary = "/usr/local/hpl/bin/xhpl"  # Path to HPL binary
 
-        if self.instance_id in HPLInstance._active_instances:
-            raise RuntimeError(f"An HPL instance with ID {self.instance_id} is already active.")
-        HPLInstance._active_instances.add(self.instance_id)
-
-        print(f"Initializing HPL instance with ID {self.instance_id}")
         self._prepare_environment()
 
     def _prepare_environment(self):
@@ -54,7 +52,6 @@ class HPLInstance:
         """Cleanup the working environment."""
         print(f"Cleaning up working directory: {self.working_dir}")
         shutil.rmtree(self.working_dir, ignore_errors=True)
-        HPLInstance._active_instances.discard(self.instance_id)
 
     def run(self):
         """
@@ -67,8 +64,15 @@ class HPLInstance:
             # Construct result file path
             result_file = self.config_path.with_suffix(".result")
 
-            # Construct and run the HPL command
-            hpl_command = f"mpirun --allow-run-as-root -np {self.process_count} ./xhpl"
+            # General case for n processes
+            core_start = self.instance_id * self.process_count
+            core_indices = [str(core_start + i) for i in range(self.process_count)]
+            cpu_set_str = ",".join(core_indices)
+
+            hpl_command = f"mpirun --use-hwthread-cpus --allow-run-as-root -np {self.process_count} --cpu-set {cpu_set_str} ./xhpl"
+
+
+            # Execute the HPL benchmark
             print(f"Executing HPL benchmark. Command: {hpl_command}")
             with open(result_file, "w") as result:
                 subprocess.run(hpl_command, shell=True, check=True, cwd=self.working_dir, stdout=result, stderr=result)
