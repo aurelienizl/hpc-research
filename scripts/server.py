@@ -9,7 +9,7 @@ from scheduler import Scheduler
 
 # Configuration
 CONFIGURATIONS_DIR = "HPLConfigurations"
-API_HOST = '127.0.0.1'
+API_HOST = "127.0.0.1"
 API_PORT = 5000
 
 
@@ -25,7 +25,7 @@ def create_app(task_manager: TaskManager) -> Flask:
     """
     app = Flask(__name__)
 
-    @app.route('/submit_task', methods=['POST'])
+    @app.route("/submit_task", methods=["POST"])
     def submit_task():
         """
         Endpoint to submit a new benchmark task.
@@ -44,21 +44,27 @@ def create_app(task_manager: TaskManager) -> Flask:
         cpu_count = data.get("cpu_count")
 
         if config_type not in ["cooperative", "competitive"]:
-            return jsonify({"error": "Invalid config_type. Must be 'cooperative' or 'competitive'."}), 400
+            return (
+                jsonify(
+                    {
+                        "error": "Invalid config_type. Must be 'cooperative' or 'competitive'."
+                    }
+                ),
+                400,
+            )
 
         if not isinstance(cpu_count, int) or cpu_count < 1:
-            return jsonify({"error": "Invalid cpu_count. Must be a positive integer."}), 400
+            return (
+                jsonify({"error": "Invalid cpu_count. Must be a positive integer."}),
+                400,
+            )
 
-        task = {
-            "config_type": config_type,
-            "cpu_count": cpu_count,
-            "task_id": None
-        }
+        task = {"config_type": config_type, "cpu_count": cpu_count, "task_id": None}
 
         task_id = task_manager.enqueue_task(task)
         return jsonify({"task_id": task_id}), 200
 
-    @app.route('/tasks/<int:task_id>', methods=['GET'])
+    @app.route("/tasks/<int:task_id>", methods=["GET"])
     def task_status(task_id: int):
         """
         Endpoint to check the status of a specific task.
@@ -77,7 +83,7 @@ def create_app(task_manager: TaskManager) -> Flask:
         else:
             return jsonify({"error": f"Task with ID {task_id} not found."}), 404
 
-    @app.route('/tasks', methods=['GET'])
+    @app.route("/tasks", methods=["GET"])
     def status():
         """
         Endpoint to check the scheduler's status.
@@ -87,11 +93,14 @@ def create_app(task_manager: TaskManager) -> Flask:
             - Number of active worker threads.
         """
         queue_size = task_manager.task_queue.qsize()
-        active_workers = threading.active_count()  # Includes main thread and worker thread
-        return jsonify({
-            "queue_size": queue_size,
-            "active_workers": active_workers
-        }), 200
+        active_workers = (
+            threading.active_count()
+        )  # Includes main thread and worker thread
+        return (
+            jsonify({"queue_size": queue_size, "active_workers": active_workers}),
+            200,
+        )
+
     return app
 
 
@@ -115,7 +124,9 @@ def main():
     app = create_app(task_manager)
 
     # Start Flask app in a separate thread to prevent blocking
-    flask_thread = threading.Thread(target=lambda: app.run(host=API_HOST, port=API_PORT, threaded=True), daemon=True)
+    flask_thread = threading.Thread(
+        target=lambda: app.run(host=API_HOST, port=API_PORT, threaded=True), daemon=True
+    )
     flask_thread.start()
     scheduler.log_interface.info(f"Flask API server started on {API_HOST}:{API_PORT}")
 

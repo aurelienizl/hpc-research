@@ -41,7 +41,9 @@ class TaskManager:
         # Dictionary to store task status
         self.task_status = {}
 
-        self.scheduler.log_interface.info("TaskManager initialized and worker thread started.")
+        self.scheduler.log_interface.info(
+            "TaskManager initialized and worker thread started."
+        )
 
     def enqueue_task(self, task: Dict[str, Any]):
         """
@@ -53,7 +55,9 @@ class TaskManager:
 
         # Check if task queue is full
         if len(self.task_status) >= self.task_queue_size:
-            self.scheduler.log_interface.error("Task queue is full. Cannot enqueue new task.")
+            self.scheduler.log_interface.error(
+                "Task queue is full. Cannot enqueue new task."
+            )
             return None
 
         # Lock, increment, assign and put task in queue
@@ -67,7 +71,9 @@ class TaskManager:
         # Put task in queue
         self.task_queue.put(task)
 
-        self.scheduler.log_interface.info(f"Task enqueued: {task} with task_id: {self.task_id}")
+        self.scheduler.log_interface.info(
+            f"Task enqueued: {task} with task_id: {self.task_id}"
+        )
         return self.task_id
 
     def _process_tasks(self):
@@ -78,7 +84,9 @@ class TaskManager:
             task = self.task_queue.get()  # Blocks until a task is available
             if task is None:
                 # Sentinel value to stop the worker
-                self.scheduler.log_interface.info("Received shutdown signal. Stopping task processing.")
+                self.scheduler.log_interface.info(
+                    "Received shutdown signal. Stopping task processing."
+                )
                 break
 
             # Update task status to 'processing'
@@ -88,11 +96,15 @@ class TaskManager:
             instance_type = task.get("config_type")
             cpu_count = task.get("cpu_count")
 
-            self.scheduler.log_interface.info(f"Processing task: {task}" + f" with task_id: {task_id}")
+            self.scheduler.log_interface.info(
+                f"Processing task: {task}" + f" with task_id: {task_id}"
+            )
 
             self.scheduler.handle_hpl_instance(instance_type, cpu_count)
 
-            self.scheduler.log_interface.info(f"Task completed: {task}" + f" with task_id: {task_id}")
+            self.scheduler.log_interface.info(
+                f"Task completed: {task}" + f" with task_id: {task_id}"
+            )
 
             # Update task status to 'completed'
             self.task_status[task_id] = "completed"

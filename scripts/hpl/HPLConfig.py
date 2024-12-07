@@ -6,14 +6,12 @@ from pathlib import Path
 from typing import Tuple, List, Optional
 
 
-
 class HPLConfig:
     """
     A class to generate and manage HPL benchmark configurations for cooperative and competitive setups.
     """
 
     SCRIPT_PATH = os.path.join(os.path.dirname(__file__), "HPLInstall.sh")
-
 
     def __init__(self, output_dir: str = "HPLConfigurations"):
         """
@@ -25,8 +23,12 @@ class HPLConfig:
         self.output_dir = output_dir
         print("HPLConfig initialized.")
         self.total_cpus = self._get_total_cpus()
-        self.total_memory, self.available_memory, self.usable_memory = self._get_memory_info()
-        print(f"System details: {self.total_cpus} CPUs, {self.usable_memory} MB usable memory.")
+        self.total_memory, self.available_memory, self.usable_memory = (
+            self._get_memory_info()
+        )
+        print(
+            f"System details: {self.total_cpus} CPUs, {self.usable_memory} MB usable memory."
+        )
 
     @staticmethod
     def _read_proc_file(filepath: str) -> List[str]:
@@ -40,7 +42,7 @@ class HPLConfig:
             List[str]: Lines from the file.
         """
         try:
-            with open(filepath, 'r') as file:
+            with open(filepath, "r") as file:
                 return file.readlines()
         except FileNotFoundError:
             print(f"File not found: {filepath}")
@@ -68,7 +70,7 @@ class HPLConfig:
         meminfo_lines = self._read_proc_file("/proc/meminfo")
         meminfo = {}
         for line in meminfo_lines:
-            parts = line.split(':')
+            parts = line.split(":")
             if len(parts) == 2:
                 key, value = parts
                 meminfo[key.strip()] = int(value.strip().split()[0])
@@ -77,7 +79,9 @@ class HPLConfig:
         available_memory = meminfo.get("MemAvailable", 0) // 1024  # Convert to MB
         usable_memory = int(available_memory * 0.85)  # Use 85% of available memory
 
-        print(f"Memory details - Total: {total_memory} MB, Available: {available_memory} MB, Usable: {usable_memory} MB")
+        print(
+            f"Memory details - Total: {total_memory} MB, Available: {available_memory} MB, Usable: {usable_memory} MB"
+        )
         return total_memory, available_memory, usable_memory
 
     @staticmethod
@@ -120,7 +124,7 @@ class HPLConfig:
         ram_allocation: int,
         output_dir: str,
         instance_id: Optional[int] = None,
-        num_instances: Optional[int] = None
+        num_instances: Optional[int] = None,
     ):
         """
         Generate the HPL configuration file.
@@ -209,7 +213,9 @@ class HPLConfig:
 
         for cpu_count in cpu_counts:
             num_instances = self.total_cpus // cpu_count
-            competitive_dir = os.path.join(competitive_base_dir, f"{num_instances}_instances")
+            competitive_dir = os.path.join(
+                competitive_base_dir, f"{num_instances}_instances"
+            )
             ram_per_instance = self.usable_memory // num_instances
 
             for instance_id in range(1, num_instances + 1):
@@ -217,7 +223,7 @@ class HPLConfig:
                     cpu_count,
                     ram_per_instance,
                     competitive_dir,
-                    instance_id=instance_id
+                    instance_id=instance_id,
                 )
 
     def _generate_cpu_counts(self, total_cpus: int) -> List[int]:
@@ -264,7 +270,9 @@ class HPLConfig:
 
         if config_type == "cooperative":
             # Path: HPLConfigurations/cooperative/hpl_{cpu_count}cpu.dat
-            file_path = os.path.join(self.output_dir, "cooperative", f"hpl_{cpu_count}cpu.dat")
+            file_path = os.path.join(
+                self.output_dir, "cooperative", f"hpl_{cpu_count}cpu.dat"
+            )
             if os.path.isfile(file_path):
                 config_paths.append(file_path)
                 print(f"Found cooperative configuration: {file_path}")
@@ -277,9 +285,13 @@ class HPLConfig:
                 return config_paths
 
             num_instances = self.total_cpus // cpu_count
-            instance_dir = os.path.join(self.output_dir, "competitive", f"{num_instances}_instances")
+            instance_dir = os.path.join(
+                self.output_dir, "competitive", f"{num_instances}_instances"
+            )
             if not os.path.isdir(instance_dir):
-                print(f"No competitive configurations directory found for {num_instances} instances.")
+                print(
+                    f"No competitive configurations directory found for {num_instances} instances."
+                )
                 return config_paths
 
             # Pattern to match files: hpl_{cpu_count}cpu_instance*.dat
@@ -287,11 +299,17 @@ class HPLConfig:
             matched_files = glob.glob(pattern)
             if matched_files:
                 config_paths.extend(matched_files)
-                print(f"Found {len(matched_files)} competitive configurations for {cpu_count} CPUs.")
+                print(
+                    f"Found {len(matched_files)} competitive configurations for {cpu_count} CPUs."
+                )
             else:
-                print(f"No competitive configurations found for {cpu_count} CPUs in {instance_dir}.")
+                print(
+                    f"No competitive configurations found for {cpu_count} CPUs in {instance_dir}."
+                )
         else:
-            print(f"Invalid configuration type: {config_type}. Use 'cooperative' or 'competitive'.")
+            print(
+                f"Invalid configuration type: {config_type}. Use 'cooperative' or 'competitive'."
+            )
 
         return config_paths
 

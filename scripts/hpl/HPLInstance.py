@@ -10,7 +10,9 @@ class HPLInstance:
     Each instance is assigned a unique identifier to ensure separate directories.
     """
 
-    def __init__(self, instance_type: str, config_path: str, process_count: int, instance_id: int):
+    def __init__(
+        self, instance_type: str, config_path: str, process_count: int, instance_id: int
+    ):
         """
         Initialize an HPL instance with a unique identifier.
 
@@ -41,9 +43,13 @@ class HPLInstance:
     def _prepare_environment(self):
         """Prepare the environment for HPL execution."""
         if self.working_dir.exists():
-            raise RuntimeError(f"Working directory already exists for instance ID {self.instance_id}: {self.working_dir}")
+            raise RuntimeError(
+                f"Working directory already exists for instance ID {self.instance_id}: {self.working_dir}"
+            )
 
-        print(f"Preparing environment for HPL instance. Working directory: {self.working_dir}")
+        print(
+            f"Preparing environment for HPL instance. Working directory: {self.working_dir}"
+        )
         self.working_dir.mkdir(parents=True, exist_ok=True)
         shutil.copy(self.hpl_binary, self.working_dir)
         shutil.copy(self.config_path, self.working_dir / "HPL.dat")
@@ -71,13 +77,21 @@ class HPLInstance:
 
             hpl_command = f"mpirun --use-hwthread-cpus --allow-run-as-root -np {self.process_count} --cpu-set {cpu_set_str} ./xhpl"
 
-
             # Execute the HPL benchmark
             print(f"Executing HPL benchmark. Command: {hpl_command}")
             with open(result_file, "w") as result:
-                subprocess.run(hpl_command, shell=True, check=True, cwd=self.working_dir, stdout=result, stderr=result)
+                subprocess.run(
+                    hpl_command,
+                    shell=True,
+                    check=True,
+                    cwd=self.working_dir,
+                    stdout=result,
+                    stderr=result,
+                )
 
-            print(f"HPL benchmark completed successfully. Results saved to {result_file}")
+            print(
+                f"HPL benchmark completed successfully. Results saved to {result_file}"
+            )
         except subprocess.CalledProcessError as e:
             print(f"Error during HPL execution: {e}")
             raise

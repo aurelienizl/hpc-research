@@ -1,4 +1,3 @@
-
 from pathlib import Path
 from typing import Optional, List
 
@@ -37,7 +36,9 @@ class HPLInterface:
             self.hpl_config.create_competitive_configs()
         print(f"HPL configurations generated in {self.config_output_dir}.")
 
-    def setup_hpl_instance(self, instance_type: str, config_path: str, cpu_count: int, instance_id: int) -> HPLInstance:
+    def setup_hpl_instance(
+        self, instance_type: str, config_path: str, cpu_count: int, instance_id: int
+    ) -> HPLInstance:
         """
         Set up an HPL instance.
 
@@ -55,7 +56,7 @@ class HPLInterface:
                 instance_type=instance_type,
                 config_path=config_path,
                 process_count=cpu_count,
-                instance_id=instance_id
+                instance_id=instance_id,
             )
             return instance
         except Exception as e:
@@ -86,13 +87,19 @@ class HPLInterface:
         Returns:
             List[str]: List of configuration file paths. Empty list if no configurations found.
         """
-        print(f"Retrieving HPL configurations for type '{config_type}' and CPU count {cpu_count}...")
+        print(
+            f"Retrieving HPL configurations for type '{config_type}' and CPU count {cpu_count}..."
+        )
         try:
             config_paths = self.hpl_config.get_config_paths(config_type, cpu_count)
             if config_paths:
-                print(f"Found {len(config_paths)} configuration(s) for type '{config_type}' with {cpu_count} CPUs.")
+                print(
+                    f"Found {len(config_paths)} configuration(s) for type '{config_type}' with {cpu_count} CPUs."
+                )
             else:
-                print(f"No configurations found for type '{config_type}' with {cpu_count} CPUs.")
+                print(
+                    f"No configurations found for type '{config_type}' with {cpu_count} CPUs."
+                )
             return config_paths
         except Exception as e:
             print(f"Error retrieving HPL configurations: {e}")

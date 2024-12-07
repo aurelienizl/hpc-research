@@ -4,21 +4,25 @@ from typing import Optional
 
 # Global Variables
 
+
 class CollectlInterface:
 
     SCRIPT_PATH = os.path.join(os.path.dirname(__file__), "CollectlManager.sh")
 
-
     def __init__(self):
         print("CollectlManager initialized.")
 
-    def _run_command(self, command: str, timeout: int = 60) -> subprocess.CompletedProcess:
+    def _run_command(
+        self, command: str, timeout: int = 60
+    ) -> subprocess.CompletedProcess:
         """
         Helper method to run shell commands and handle errors.
         """
         try:
             print(f"Running command: {command}")
-            result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=timeout)
+            result = subprocess.run(
+                command, shell=True, capture_output=True, text=True, timeout=timeout
+            )
             result.check_returncode()
             return result
         except subprocess.CalledProcessError as e:
@@ -34,14 +38,21 @@ class CollectlInterface:
         """
         try:
             print("Installing Collectl.")
-            result = self._run_command(f"{CollectlInterface.SCRIPT_PATH} install", timeout=120)
+            result = self._run_command(
+                f"{CollectlInterface.SCRIPT_PATH} install", timeout=120
+            )
             print("Collectl installation completed.")
             return result.stdout
         except Exception as e:
             print(f"Failed to install Collectl: {e}")
             return str(e)
 
-    def start_collectl(self, id: str, output_file: Optional[str] = None, custom_command: Optional[str] = None) -> str:
+    def start_collectl(
+        self,
+        id: str,
+        output_file: Optional[str] = None,
+        custom_command: Optional[str] = None,
+    ) -> str:
         """
         Start Collectl with a unique ID and optional custom command.
         """
@@ -88,7 +99,7 @@ class CollectlInterface:
         """
         pid_file = os.path.join("/tmp/collectl_pids", f"{id}.pid")
         if os.path.exists(pid_file):
-            with open(pid_file, 'r') as file:
+            with open(pid_file, "r") as file:
                 pid = int(file.read().strip())
                 running = os.path.exists(f"/proc/{pid}")
                 if running:

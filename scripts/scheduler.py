@@ -10,6 +10,7 @@ from hpl.HPLInstance import HPLInstance
 from collectl.CollectlInterface import CollectlInterface
 from log.LogInterface import LogInterface
 
+
 class Scheduler:
     """
     Scheduler class responsible for:
@@ -79,13 +80,20 @@ class Scheduler:
         # Get the HPL configuration file for the configuration type and CPU count
         configurations = self.hpl_config.get_config_paths(instance_type, cpu_count)
         if not configurations:
-            self.log_interface.error(f"No configurations found for {instance_type} and {cpu_count} CPUs.")
+            self.log_interface.error(
+                f"No configurations found for {instance_type} and {cpu_count} CPUs."
+            )
             return
 
         # Set up the HPL instance
         instances = []
         for config_path in configurations:
-            instance = HPLInstance(instance_type=instance_type, config_path=config_path, process_count=cpu_count, instance_id=len(instances))
+            instance = HPLInstance(
+                instance_type=instance_type,
+                config_path=config_path,
+                process_count=cpu_count,
+                instance_id=len(instances),
+            )
             instances.append(instance)
 
         # Run each HPL instance
@@ -98,5 +106,3 @@ class Scheduler:
         # Wait for all processes to finish
         for process in processes:
             process.join()
-
-
