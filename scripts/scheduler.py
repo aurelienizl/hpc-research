@@ -20,7 +20,7 @@ class Scheduler:
 
     RESULT_DIR = Path("../results")
 
-    def __init__(self, config_output_dir: str = "HPLConfigurations"):
+    def __init__(self, config_output_dir: str = "../HPLConfigurations"):
         """
         Initialize the Scheduler.
 
@@ -82,7 +82,6 @@ class Scheduler:
         instance_result_dir = self.RESULT_DIR / str(instance_id)
         instance_result_dir.mkdir(parents=True, exist_ok=True)
 
-
         # Get the HPL configuration file for the configuration type and CPU count
         configurations = self.hpl_config.get_config_paths(instance_type, cpu_count)
         if not configurations:
@@ -97,11 +96,16 @@ class Scheduler:
             instance = HPLInstance(
                 instance_type=instance_type,
                 config_path=config_path,
-                            result_dir=instance_result_dir,
+                result_dir=instance_result_dir,
                 process_count=cpu_count,
                 instance_id=len(instances),
             )
             instances.append(instance)
+
+        # Run the collectl monitoring tool
+        self.collectl_interface.start_collectl(
+            instance_id, instance_result_dir / "collectl.log"
+        )
 
         # Run each HPL instance
         processes = []
@@ -113,3 +117,6 @@ class Scheduler:
         # Wait for all processes to finish
         for process in processes:
             process.join()
+
+        # Stop the collectl monitoring tool
+        self.collectl_interface.stop_collectl(instance_id)
