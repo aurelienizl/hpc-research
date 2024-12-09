@@ -13,7 +13,7 @@ class HPLConfig:
 
     SCRIPT_PATH = os.path.join(os.path.dirname(__file__), "HPLInstall.sh")
 
-    def __init__(self, output_dir: str = "HPLConfigurations"):
+    def __init__(self, output_dir: str = "../HPLConfigurations"):
         """
         Initialize the HPLConfig class.
 

@@ -11,33 +11,35 @@ class HPLInstance:
     """
 
     def __init__(
-        self, instance_type: str, config_path: str, process_count: int, instance_id: int
+        self, instance_type: str, config_path: Path, result_dir: Path , process_count: int, instance_id: int
     ):
         """
         Initialize an HPL instance with a unique identifier.
 
         Args:
             instance_type (str): Type of the HPL instance (e.g., 'cooperative' or 'competitive').
-            config_path (str): Path to the HPL configuration file (HPL.dat).
+            config_path (Path): Path to the HPL configuration file (HPL.dat).
+            result_dir (Path): Directory to save the result files.
             process_count (int): Number of processes to run with mpirun.
             instance_id (int): Unique identifier for the HPL instance.
         """
-        self.instance_type = instance_type
-
         print(f"Initializing HPL instance with ID {instance_id}")
 
+        # Set instance attributes
+        self.instance_type = instance_type
         self.config_path = Path(config_path)
-        if not self.config_path.exists():
-            raise FileNotFoundError(f"Configuration file not found: {config_path}")
-
+        self.result_dir = Path(result_dir)
         self.process_count = process_count
-        if self.process_count <= 0:
-            raise ValueError("Process count must be greater than 0.")
-
         self.instance_id = instance_id
+
+        # Create the filename for the result file
+        self.result_file = f"hpl_{instance_type}_{process_count}_{instance_id}.result"
+
+        # Create a working directory for the HPL instance
         self.working_dir = Path(f"/tmp/hpl_instance/{self.instance_id}")
         self.hpl_binary = "/usr/local/hpl/bin/xhpl"  # Path to HPL binary
 
+        # Prepare the environment for HPL execution
         self._prepare_environment()
 
     def _prepare_environment(self):
@@ -67,19 +69,21 @@ class HPLInstance:
             RuntimeError: If execution fails.
         """
         try:
-            # Construct result file path
-            result_file = self.config_path.with_suffix(".result")
 
             # General case for n processes
             core_start = self.instance_id * self.process_count
             core_indices = [str(core_start + i) for i in range(self.process_count)]
             cpu_set_str = ",".join(core_indices)
 
+            # Ensure the HPL result directory exists
+            self.result_dir.mkdir(parents=True, exist_ok=True)
+
+            # HPL command
             hpl_command = f"mpirun --use-hwthread-cpus --allow-run-as-root -np {self.process_count} --cpu-set {cpu_set_str} ./xhpl"
 
             # Execute the HPL benchmark
             print(f"Executing HPL benchmark. Command: {hpl_command}")
-            with open(result_file, "w") as result:
+            with open(self.result_dir / self.result_file, "w") as result:
                 subprocess.run(
                     hpl_command,
                     shell=True,
@@ -90,7 +94,7 @@ class HPLInstance:
                 )
 
             print(
-                f"HPL benchmark completed successfully. Results saved to {result_file}"
+                f"HPL benchmark completed successfully. Results saved to {self.result_dir / self.result_file}"
             )
         except subprocess.CalledProcessError as e:
             print(f"Error during HPL execution: {e}")

@@ -2,7 +2,6 @@
 
 import sys
 from pathlib import Path
-from typing import List
 from multiprocessing import Process
 
 from hpl.HPLConfig import HPLConfig
@@ -18,6 +17,8 @@ class Scheduler:
     - Setting up the environment (generating HPL configs).
     - Running HPL instances (either cooperative or competitive).
     """
+
+    RESULT_DIR = Path("../results")
 
     def __init__(self, config_output_dir: str = "HPLConfigurations"):
         """
@@ -60,7 +61,7 @@ class Scheduler:
             self.log_interface.error(f"Failed to set up environment: {e}")
             sys.exit(1)
 
-    def handle_hpl_instance(self, instance_type: str, cpu_count: int):
+    def handle_hpl_instance(self, instance_type: str, cpu_count: int, instance_id: int):
         """
         Handle an HPL instance by setting it up, running it, and collecting performance data.
 
@@ -77,6 +78,11 @@ class Scheduler:
         4. Wait for the HPL instance to finish.
         """
 
+        # Ensure the result directory exists
+        instance_result_dir = self.RESULT_DIR / str(instance_id)
+        instance_result_dir.mkdir(parents=True, exist_ok=True)
+
+
         # Get the HPL configuration file for the configuration type and CPU count
         configurations = self.hpl_config.get_config_paths(instance_type, cpu_count)
         if not configurations:
@@ -91,6 +97,7 @@ class Scheduler:
             instance = HPLInstance(
                 instance_type=instance_type,
                 config_path=config_path,
+                            result_dir=instance_result_dir,
                 process_count=cpu_count,
                 instance_id=len(instances),
             )

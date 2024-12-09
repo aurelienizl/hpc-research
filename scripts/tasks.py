@@ -100,7 +100,7 @@ class TaskManager:
                 f"Processing task: {task}" + f" with task_id: {task_id}"
             )
 
-            self.scheduler.handle_hpl_instance(instance_type, cpu_count)
+            self.scheduler.handle_hpl_instance(instance_type, cpu_count, task_id)
 
             self.scheduler.log_interface.info(
                 f"Task completed: {task}" + f" with task_id: {task_id}"
