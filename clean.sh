@@ -15,10 +15,19 @@ sudo find . -type f -name "*.log" -exec rm -f {} +
 # Find and remove all HPLConfigurations directories
 sudo find . -type d -name "HPLConfigurations" -exec rm -r {} +
 
+# Remove all results directories
+sudo find . -type d -name "results" -exec rm -r {} +
+
 # Remove the collectl file in /tmp/collectl_pids
 sudo rm -rf /tmp/collectl_pids
 
 # Remove the collectl file in /tmp/hpl_instance
 sudo rm -rf /tmp/hpl_instance
+
+# Kill all the running collectl processes
+sudo killall collectl
+
+# Kill all the running HPL processes
+sudo killall xhpl
 
 echo "Python project cleaned successfully."
