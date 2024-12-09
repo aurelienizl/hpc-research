@@ -228,7 +228,7 @@ class HPLConfig:
 
     def _generate_cpu_counts(self, total_cpus: int) -> List[int]:
         """
-        Generate a list of CPU counts by halving the total CPUs until 1.
+        Generate a list of CPU counts from 1 to total_cpus.
 
         Args:
             total_cpus (int): Total number of CPUs.
@@ -236,11 +236,7 @@ class HPLConfig:
         Returns:
             List[int]: List of CPU counts.
         """
-        cpu_counts = []
-        cpu = total_cpus
-        while cpu >= 1:
-            cpu_counts.append(cpu)
-            cpu //= 2
+        cpu_counts = list(range(1, total_cpus + 1))
         print(f"Generated CPU counts for configurations: {cpu_counts}")
         return cpu_counts
 
