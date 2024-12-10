@@ -14,7 +14,7 @@ class TaskManager:
     and executing HPL instances using the Scheduler.
     """
 
-    def __init__(self, scheduler: Scheduler, max_queue_size: int = 10):
+    def __init__(self, scheduler: Scheduler, max_queue_size: int = 100):
         """
         Initialize the TaskManager.
 
