@@ -1,9 +1,11 @@
 # scheduler.py
 
 import sys
+import subprocess
 from pathlib import Path
+from typing import Tuple, Optional
+import logging
 from multiprocessing import Process
-from typing import Dict, Optional
 
 from hpl.HPLConfig import HPLConfig
 from hpl.HPLInstance import HPLInstance
@@ -13,10 +15,8 @@ from log.LogInterface import LogInterface
 
 class Scheduler:
     """
-    Scheduler class responsible for:
-    - Installing dependencies (HPL, Collectl).
-    - Setting up the environment (generating HPL configs).
-    - Running HPL instances (either cooperative or competitive).
+    Responsible for installing dependencies, setting up environments,
+    and executing HPL instances in both cooperative and competitive modes.
     """
 
     RESULT_DIR = Path("../results")
@@ -28,122 +28,113 @@ class Scheduler:
         Args:
             config_output_dir (str): Directory to save generated HPL configurations.
         """
-        self.config_output_dir = config_output_dir
+        self.config_output_dir = Path(config_output_dir)
         self.hpl_config = HPLConfig(output_dir=self.config_output_dir)
         self.collectl_interface = CollectlInterface()
         self.log_interface = LogInterface(verbose=True)
 
-        self.log_interface.info("Scheduler initialized.")
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger.info("Scheduler initialized.")
 
     def install_dependencies(self):
         """
-        Install all required dependencies: HPL and Collectl.
-        If any installation fails, the script exits with code 1.
+        Install required dependencies: HPL and Collectl.
+        Exits the program if installation fails.
         """
         try:
-            self.log_interface.info("Starting dependency installation...")
+            self.logger.info("Starting dependency installation...")
             self.hpl_config.install_hpl()
             self.collectl_interface.install_collectl()
-            self.log_interface.info("Dependencies installed successfully.")
+            self.logger.info("Dependencies installed successfully.")
         except Exception as e:
-            self.log_interface.error(f"Failed to install dependencies: {e}")
+            self.logger.error(f"Failed to install dependencies: {e}")
             sys.exit(1)
 
     def setup_environment(self):
         """
-        # TODO
+        Set up the necessary environment for running benchmarks.
         """
-        self.log_interface.info("Environment setup completed.")
+        # Placeholder for environment setup logic
+        self.logger.info("Environment setup completed.")
 
     def handle_hpl_instance(
-        self, instance_type: str, cpu_count: int, memory_usage: int, instance_id: int
+        self,
+        instance_type: str,
+        cpu_count: int,
+        memory_usage: Optional[int],
+        instance_id: int,
     ):
         """
-        Handle an HPL instance by setting it up, running it, and collecting performance data.
+        Set up and execute an HPL instance.
 
         Args:
-            instance_type (str): Type of configuration to use ('cooperative' or 'competitive').
-            cpu_count (int): Number of CPUs to use for the benchmark.
+            instance_type (str): Type of configuration ('cooperative' or 'competitive').
+            cpu_count (int): Number of CPUs to allocate.
+            memory_usage (Optional[int]): Memory usage in MB.
             instance_id (int): Unique identifier for the instance.
-
-        Algorithm:
-        1. Get the HPL configuration file for the configuration type and CPU count.
-        2. Set up the process to run the HPL instance.
-        3. Launch the HPL instance.
-        4. Wait for the HPL instance to finish.
         """
-
-        # Ensure the result directory exists
+        self.RESULT_DIR.mkdir(parents=True, exist_ok=True)
         instance_result_dir = self.RESULT_DIR / str(instance_id)
         instance_result_dir.mkdir(parents=True, exist_ok=True)
 
-        # Determine competitive mode based on instance_type
-        comp = instance_type.lower() == "competitive"
+        comp_mode = instance_type.lower() == "competitive"
+        ram_percent = (
+            memory_usage if memory_usage else HPLConfig.DEFAULT_RAM_USAGE_PERCENT
+        )
 
         try:
-            if comp:
-                config_path, num_instances = self.hpl_config.get_config_by_cpu_ram_comp(
-                    cpu_count=cpu_count, ram_percent=memory_usage, comp=True
-                )
-            else:
-                config_path, num_instances = self.hpl_config.get_config_by_cpu_ram_comp(
-                    cpu_count=cpu_count, ram_percent=memory_usage, comp=False
-                )
+            config_path, num_instances = self.hpl_config.get_config(
+                cpu_count=cpu_count, ram_percent=ram_percent, competitive=comp_mode
+            )
         except ValueError as ve:
-            self.log_interface.error(f"Invalid configuration parameters: {ve}")
+            self.logger.error(f"Configuration error: {ve}")
             return
 
         if not config_path:
-            self.log_interface.error(
-                f"No configuration file generated for {instance_type} with {cpu_count} CPUs."
+            self.logger.error(
+                f"No configuration generated for {instance_type} with {cpu_count} CPUs."
             )
             return
 
-        # Set up the HPL instance(s)
-        instances = []
-        for i in range(num_instances):
-            instance = HPLInstance(
+        # Initialize HPL instances
+        hpl_instances = [
+            HPLInstance(
                 instance_type=instance_type,
                 config_path=config_path,
                 result_dir=instance_result_dir,
                 process_count=cpu_count,
                 instance_id=i,
             )
-            instances.append(instance)
+            for i in range(num_instances)
+        ]
 
-        # Run the collectl monitoring tool
+        # Start Collectl monitoring
         collectl_log_path = instance_result_dir / "collectl.log"
         self.collectl_interface.start_collectl(instance_id, collectl_log_path)
 
-        # Run each HPL instance as a separate process
+        # Execute HPL instances using multiprocessing.Process
         processes = []
-        for instance in instances:
+        for instance in hpl_instances:
             process = Process(target=instance.run)
             process.start()
             processes.append(process)
 
-        # Wait for all processes to finish
+        # Wait for all processes to complete
         for process in processes:
             process.join()
 
-        # Stop the collectl monitoring tool
+        # Stop Collectl monitoring
         self.collectl_interface.stop_collectl(instance_id)
 
-        self.log_interface.info(
+        self.logger.info(
             f"HPL instances for {instance_type} with {cpu_count} CPUs have completed."
         )
 
     def handle_custom_hpl_instance(
-        self,
-        instance_id: int,
-        ps: int,
-        qs: int,
-        n_value: int,
-        nb: int,
-        comp: bool,
+        self, instance_id: int, ps: int, qs: int, n_value: int, nb: int, comp: bool
     ):
         """
-        Handle a custom HPL instance by setting it up, running it, and collecting performance data.
+        Set up and execute a custom HPL instance.
 
         Args:
             instance_id (int): Unique identifier for the instance.
@@ -153,46 +144,46 @@ class Scheduler:
             nb (int): Block size.
             comp (bool): Competitive mode flag.
         """
-
-        # Ensure the result directory exists
+        self.RESULT_DIR.mkdir(parents=True, exist_ok=True)
         instance_result_dir = self.RESULT_DIR / str(instance_id)
         instance_result_dir.mkdir(parents=True, exist_ok=True)
 
-        # Create the custom HPL configuration
         try:
-            path, instances = self.hpl_config.get_config_by_n_nb_p_q(
-                n_value=n_value, nb=nb, ps=ps, qs=qs, comp=comp
+            config_path, num_instances = self.hpl_config.get_custom_config(
+                n=n_value, nb=nb, p=ps, q=qs, competitive=comp
             )
         except ValueError as ve:
-            self.log_interface.error(f"Failed to create custom configuration: {ve}")
+            self.logger.error(f"Custom configuration error: {ve}")
             return
 
-        instances = []
-        # Set up the HPL instance
-        for i in range(instances):
-            instance = HPLInstance(
+        hpl_instances = [
+            HPLInstance(
                 instance_type="custom",
-                config_path=path,
+                config_path=config_path,
                 result_dir=instance_result_dir,
                 process_count=ps * qs,
                 instance_id=i,
             )
-            instances.append(instance)
+            for i in range(num_instances)
+        ]
 
-        # Run the collectl monitoring tool
         collectl_log_path = instance_result_dir / "collectl.log"
         self.collectl_interface.start_collectl(instance_id, collectl_log_path)
 
-        # Run each HPL instance as a separate process
+        # Execute HPL instances using multiprocessing.Process
         processes = []
-        for instance in instances:
+        for instance in hpl_instances:
             process = Process(target=instance.run)
             process.start()
             processes.append(process)
 
-        # Stop the collectl monitoring tool
+        # Wait for all processes to complete
+        for process in processes:
+            process.join()
+
+        # Stop Collectl monitoring
         self.collectl_interface.stop_collectl(instance_id)
 
-        self.log_interface.info(
+        self.logger.info(
             f"Custom HPL instances with N={n_value}, P={ps}, Q={qs} have completed."
         )
