@@ -34,6 +34,7 @@ def create_app(task_manager: TaskManager) -> Flask:
         {
             "config_type": "cooperative" or "competitive",
             "cpu_count": integer
+            "memory_usage": integer (optional)
         }
         """
         data = request.get_json()
@@ -42,6 +43,7 @@ def create_app(task_manager: TaskManager) -> Flask:
 
         config_type = data.get("config_type")
         cpu_count = data.get("cpu_count")
+        memory_usage = data.get("memory_usage")
 
         if config_type not in ["cooperative", "competitive"]:
             return (
@@ -59,7 +61,12 @@ def create_app(task_manager: TaskManager) -> Flask:
                 400,
             )
 
-        task = {"config_type": config_type, "cpu_count": cpu_count, "task_id": None}
+        task = {
+            "config_type": config_type,
+            "cpu_count": cpu_count,
+            "memory_usage": memory_usage if memory_usage else None,
+            "task_id": None,
+        }
 
         task_id = task_manager.enqueue_task(task)
         return jsonify({"task_id": task_id}), 200

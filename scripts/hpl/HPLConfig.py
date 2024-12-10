@@ -13,6 +13,8 @@ class HPLConfig:
 
     SCRIPT_PATH = os.path.join(os.path.dirname(__file__), "HPLInstall.sh")
 
+    DEFAULT_RAM_USAGE_PERCENT = 2
+
     def __init__(self, output_dir: str = "../HPLConfigurations"):
         """
         Initialize the HPLConfig class.
@@ -196,7 +198,7 @@ class HPLConfig:
         return file_path
 
     def get_config_by_cpu_ram_comp(
-        self, cpu_count: int, ram_percent: float, comp: bool
+        self, cpu_count: int, ram_percent: int, comp: bool
     ) -> Tuple[str, int]:
         """
         Retrieve configuration based on CPU count, RAM percentage, and competitive mode.
@@ -209,8 +211,19 @@ class HPLConfig:
         Returns:
             Tuple[str, int]: Path to the configuration file and number of instances.
         """
+
+        print(f"cpu_count: {cpu_count}, ram_percent: {ram_percent}, comp: {comp}")
+
+        if ram_percent == None:
+            ram_percent = HPLConfig.DEFAULT_RAM_USAGE_PERCENT
+
         if not (0 < ram_percent <= 100):
             raise ValueError("ram_percent must be between 0 and 100.")
+
+        if cpu_count > self.total_cpus:
+            raise ValueError(
+                f"CPU count ({cpu_count}) exceeds total CPUs ({self.total_cpus})."
+            )
 
         ram_allocation = int(self.available_memory * (ram_percent / 100))
         n_value = self._calculate_problem_size(ram_allocation)
@@ -232,23 +245,8 @@ class HPLConfig:
 
         return config_path, num_instances
 
-    def get_config_by_cpu_comp(self, cpu_count: int, comp: bool) -> Tuple[str, int]:
-        """
-        Retrieve configuration based on CPU count and competitive mode.
-        RAM is set to default 85% of available memory.
-
-        Args:
-            cpu_count (int): Number of CPUs for the configuration.
-            comp (bool): Competitive mode flag.
-
-        Returns:
-            Tuple[str, int]: Path to the configuration file and number of instances.
-        """
-        default_ram_percent = 85.0
-        return self.get_config_by_cpu_ram_comp(cpu_count, default_ram_percent, comp)
-
     def get_config_by_n_nb_p_q(
-        self, n: int, nb: int, p: int, q: int
+        self, n: int, nb: int, p: int, q: int, comp=False
     ) -> Tuple[str, int]:
         """
         Retrieve configuration based on direct specification of N, NB, P, Q.
@@ -262,15 +260,22 @@ class HPLConfig:
         Returns:
             Tuple[str, int]: Path to the configuration file and number of instances (1).
         """
+
+        # Check if the process grid is valid
         if p * q > self.total_cpus:
             raise ValueError(
                 f"Process grid P*Q ({p}*{q}={p*q}) exceeds total CPUs ({self.total_cpus})."
             )
 
+        # Setup the number of instances
+        num_instances = 1
+        if comp:
+            num_instances = math.ceil(self.total_cpus / (p * q))
+            print(f"Competitive mode: {num_instances} instances each with {p*q} CPUs.")
+
+        # Generate the HPL configuration file
         file_name = f"hpl_N{n}_NB{nb}_P{p}_Q{q}.dat"
         config_path = self._generate_hpl_file(file_name, n, nb, p, q)
-
-        num_instances = 1  # Direct specification implies a single instance
 
         return config_path, num_instances
 
