@@ -1,0 +1,50 @@
+Processing directory: 26
+WR11C2R4        5000   128     1     1              18.41             4.5284e+00
+Processing directory: 27
+WR11C2R4        5000   128     1     1              18.22             4.5750e+00
+Processing directory: 28
+WR11C2R4        5000   128     1     1              18.21             4.5788e+00
+Processing directory: 29
+WR11C2R4        5000   128     1     1              18.37             4.5392e+00
+Processing directory: 30
+WR11C2R4        5000   128     1     1              18.29             4.5572e+00
+Processing directory: 31
+WR11C2R4        5000   128     1     2              10.11             8.2484e+00
+Processing directory: 32
+WR11C2R4        5000   128     1     2               9.98             8.3503e+00
+Processing directory: 33
+WR11C2R4        5000   128     1     2               9.97             8.3603e+00
+Processing directory: 34
+WR11C2R4        5000   128     1     2               9.98             8.3578e+00
+Processing directory: 35
+WR11C2R4        5000   128     1     2               9.98             8.3497e+00
+Processing directory: 36
+WR11C2R4        5000   128     2     2               5.37             1.5514e+01
+Processing directory: 37
+WR11C2R4        5000   128     2     2               5.29             1.5752e+01
+Processing directory: 38
+WR11C2R4        5000   128     2     2               5.18             1.6098e+01
+Processing directory: 39
+WR11C2R4        5000   128     2     2               5.17             1.6125e+01
+Processing directory: 40
+WR11C2R4        5000   128     2     2               5.36             1.5569e+01
+Processing directory: 41
+WR11C2R4        5000   128     2     4               3.62             2.3057e+01
+Processing directory: 42
+WR11C2R4        5000   128     2     4               3.50             2.3830e+01
+Processing directory: 43
+WR11C2R4        5000   128     2     4               3.45             2.4135e+01
+Processing directory: 44
+WR11C2R4        5000   128     2     4               3.60             2.3173e+01
+Processing directory: 45
+WR11C2R4        5000   128     2     4               3.47             2.4052e+01
+Processing directory: 46
+WR11C2R4        5000   128     4     4               3.61             2.3114e+01
+Processing directory: 47
+WR11C2R4        5000   128     4     4               3.72             2.2426e+01
+Processing directory: 48
+WR11C2R4        5000   128     4     4               3.84             2.1714e+01
+Processing directory: 49
+WR11C2R4        5000   128     4     4               3.66             2.2795e+01
+Processing directory: 50
+WR11C2R4        5000   128     4     4               3.55             2.3513e+01
