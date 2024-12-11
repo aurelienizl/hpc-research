@@ -9,14 +9,8 @@ sudo find . -type f -name "*.pyc" -exec rm -f {} +
 # Find and remove all .txt files
 sudo find . -type f -name "*.txt" -exec rm -f {} +
 
-# Find and remove all .log files
-sudo find . -type f -name "*.log" -exec rm -f {} +
-
 # Find and remove all HPLConfigurations directories
 sudo find . -type d -name "HPLConfigurations" -exec rm -r {} +
-
-# Remove all results directories
-sudo find . -type d -name "results" -exec rm -r {} +
 
 # Remove the collectl file in /tmp/collectl_pids
 sudo rm -rf /tmp/collectl_pids
