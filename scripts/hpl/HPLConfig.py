@@ -1,32 +1,39 @@
+# hpl/HPLConfig.py
+
 import os
 import math
-import glob
+import shutil
 import subprocess
 from pathlib import Path
-from typing import Tuple, List, Optional
+from typing import Tuple, List, Optional, Dict
+import logging
 
 
 class HPLConfig:
     """
-    A class to generate and manage HPL benchmark configurations for cooperative and competitive setups.
+    Generates and manages HPL benchmark configurations based on user-defined parameters.
     """
 
-    SCRIPT_PATH = os.path.join(os.path.dirname(__file__), "HPLInstall.sh")
+    SCRIPT_PATH = Path(__file__).parent / "HPLInstall.sh"
+    DEFAULT_RAM_USAGE_PERCENT = 2
 
-    def __init__(self, output_dir: str = "HPLConfigurations"):
+    def __init__(self, output_dir: str = "../HPLConfigurations"):
         """
-        Initialize the HPLConfig class.
+        Initialize the HPLConfig.
 
         Args:
-            output_dir (str): Base directory to save the generated configurations.
+            output_dir (str): Directory to save the generated configurations.
         """
-        self.output_dir = output_dir
-        print("HPLConfig initialized.")
+        self.output_dir = Path(output_dir)
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger.info("HPLConfig initialized.")
+
         self.total_cpus = self._get_total_cpus()
         self.total_memory, self.available_memory, self.usable_memory = (
             self._get_memory_info()
         )
-        print(
+
+        self.logger.info(
             f"System details: {self.total_cpus} CPUs, {self.usable_memory} MB usable memory."
         )
 
@@ -45,7 +52,7 @@ class HPLConfig:
             with open(filepath, "r") as file:
                 return file.readlines()
         except FileNotFoundError:
-            print(f"File not found: {filepath}")
+            logging.error(f"File not found: {filepath}")
             return []
 
     def _get_total_cpus(self) -> int:
@@ -57,7 +64,7 @@ class HPLConfig:
         """
         cpuinfo = self._read_proc_file("/proc/cpuinfo")
         cpu_count = sum(1 for line in cpuinfo if line.startswith("processor"))
-        print(f"Total CPUs detected: {cpu_count}")
+        self.logger.info(f"Total CPUs detected: {cpu_count}")
         return cpu_count
 
     def _get_memory_info(self) -> Tuple[int, int, int]:
@@ -79,7 +86,7 @@ class HPLConfig:
         available_memory = meminfo.get("MemAvailable", 0) // 1024  # Convert to MB
         usable_memory = int(available_memory * 0.85)  # Use 85% of available memory
 
-        print(
+        self.logger.info(
             f"Memory details - Total: {total_memory} MB, Available: {available_memory} MB, Usable: {usable_memory} MB"
         )
         return total_memory, available_memory, usable_memory
@@ -99,7 +106,7 @@ class HPLConfig:
         while cpu_count % ps != 0 and ps > 1:
             ps -= 1
         qs = cpu_count // ps
-        print(f"Calculated process grid for {cpu_count} CPUs: Ps={ps}, Qs={qs}")
+        logging.info(f"Calculated process grid for {cpu_count} CPUs: Ps={ps}, Qs={qs}")
         return ps, qs
 
     @staticmethod
@@ -115,41 +122,39 @@ class HPLConfig:
         """
         ram_bytes = ram_mb * 1024 * 1024  # Convert MB to bytes
         n = int(math.sqrt(ram_bytes / 8))
-        print(f"Calculated problem size N based on {ram_mb} MB RAM: N={n}")
+        logging.info(f"Calculated problem size N based on {ram_mb} MB RAM: N={n}")
         return n
 
     def _generate_hpl_file(
         self,
-        cpu_count: int,
-        ram_allocation: int,
-        output_dir: str,
-        instance_id: Optional[int] = None,
-        num_instances: Optional[int] = None,
-    ):
+        file_name: str,
+        n_value: int,
+        nb: int,
+        ps: int,
+        qs: int,
+        custom_params: Optional[Dict[str, str]] = None,
+    ) -> Path:
         """
         Generate the HPL configuration file.
 
         Args:
-            cpu_count (int): Number of CPUs for the configuration.
-            ram_allocation (int): RAM allocation in MB.
-            output_dir (str): Directory to save the configuration file.
-            instance_id (Optional[int]): Instance ID for competitive configurations.
-            num_instances (Optional[int]): Number of instances for competitive configurations.
+            file_name (str): Name of the configuration file.
+            n_value (int): Problem size N.
+            nb (int): Block size.
+            ps (int): Process grid P.
+            qs (int): Process grid Q.
+            custom_params (Optional[Dict[str, str]]): Additional custom HPL parameters.
+
+        Returns:
+            Path: Path to the generated configuration file.
         """
-        ps, qs = self._calculate_ps_qs(cpu_count)
-        n_value = self._calculate_problem_size(ram_allocation)
-        nb = 192  # Fixed block size as per template
-
-        if instance_id is not None:
-            file_name = f"hpl_{cpu_count}cpu_instance{instance_id}.dat"
-        else:
-            file_name = f"hpl_{cpu_count}cpu.dat"
-
-        file_path = os.path.join(output_dir, file_name)
+        config_dir = self.output_dir / "custom"
+        config_dir.mkdir(parents=True, exist_ok=True)
+        file_path = config_dir / file_name
 
         hpl_template = (
             f"HPLinpack benchmark input file\n"
-            f"Innovative Computing Laboratory, University of Tennessee\n"
+            f"Generated by HPLConfig\n"
             f"HPL.out      output file name (if any)\n"
             f"6            device out (6=stdout,7=stderr,file)\n"
             f"1            # of problems sizes (N)\n"
@@ -186,148 +191,120 @@ class HPLConfig:
             f"40 9 8 13 13 20 16 32 64        values of NB\n"
         )
 
-        os.makedirs(output_dir, exist_ok=True)
+        if custom_params:
+            for key, value in custom_params.items():
+                hpl_template += f"{key} {value}\n"
+
         with open(file_path, "w") as f:
             f.write(hpl_template)
-        print(f"HPL file generated: {file_path}")
 
-    def create_cooperative_configs(self):
+        self.logger.info(f"HPL configuration file generated at {file_path}")
+        return file_path
+
+    def get_config(
+        self, cpu_count: int, ram_percent: int, competitive: bool
+    ) -> Tuple[Path, int]:
         """
-        Create HPL configurations for cooperative benchmarking.
-        """
-        print("Generating cooperative benchmark configurations...")
-        cpu_counts = self._generate_cpu_counts(self.total_cpus)
-        cooperative_dir = os.path.join(self.output_dir, "cooperative")
-
-        for cpu_count in cpu_counts:
-            ram_allocation = self.usable_memory // self.total_cpus * cpu_count
-            self._generate_hpl_file(cpu_count, ram_allocation, cooperative_dir)
-
-    def create_competitive_configs(self):
-        """
-        Create HPL configurations for competitive benchmarking.
-        """
-        print("Generating competitive benchmark configurations...")
-        cpu_counts = self._generate_cpu_counts(self.total_cpus)
-        competitive_base_dir = os.path.join(self.output_dir, "competitive")
-
-        for cpu_count in cpu_counts:
-            num_instances = self.total_cpus // cpu_count
-            competitive_dir = os.path.join(
-                competitive_base_dir, f"{num_instances}_instances"
-            )
-            ram_per_instance = self.usable_memory // num_instances
-
-            for instance_id in range(1, num_instances + 1):
-                self._generate_hpl_file(
-                    cpu_count,
-                    ram_per_instance,
-                    competitive_dir,
-                    instance_id=instance_id,
-                )
-
-    def _generate_cpu_counts(self, total_cpus: int) -> List[int]:
-        """
-        Generate a list of CPU counts by halving the total CPUs until 1.
+        Retrieve configuration based on CPU count, RAM percentage, and competitive mode.
 
         Args:
-            total_cpus (int): Total number of CPUs.
-
-        Returns:
-            List[int]: List of CPU counts.
-        """
-        cpu_counts = []
-        cpu = total_cpus
-        while cpu >= 1:
-            cpu_counts.append(cpu)
-            cpu //= 2
-        print(f"Generated CPU counts for configurations: {cpu_counts}")
-        return cpu_counts
-
-    def generate_configs(self):
-        """
-        Generate both cooperative and competitive HPL configurations.
-        """
-        print("Starting HPL configuration generation...")
-        self.create_cooperative_configs()
-        self.create_competitive_configs()
-        print("All configurations have been generated.")
-        print(f"Configurations saved in {self.output_dir}")
-
-    def get_config_paths(self, config_type: str, cpu_count: int) -> List[str]:
-        """
-        Retrieve the configuration file paths based on the specified type and CPU count.
-
-        Args:
-            config_type (str): Type of configuration ('cooperative' or 'competitive').
             cpu_count (int): Number of CPUs for the configuration.
+            ram_percent (int): Percentage of available RAM to allocate (0 < ram_percent <= 100).
+            competitive (bool): Competitive mode flag.
 
         Returns:
-            List[str]: List of configuration file paths. Empty list if no configurations found.
+            Tuple[Path, int]: Path to the configuration file and number of instances.
         """
-        config_type = config_type.lower()
-        config_paths = []
+        self.logger.debug(
+            f"Generating config for CPU: {cpu_count}, RAM%: {ram_percent}, Competitive: {competitive}"
+        )
 
-        if config_type == "cooperative":
-            # Path: HPLConfigurations/cooperative/hpl_{cpu_count}cpu.dat
-            file_path = os.path.join(
-                self.output_dir, "cooperative", f"hpl_{cpu_count}cpu.dat"
+        if not (0 < ram_percent <= 100):
+            raise ValueError("ram_percent must be between 1 and 100.")
+
+        if cpu_count > self.total_cpus:
+            raise ValueError(
+                f"CPU count ({cpu_count}) exceeds total CPUs ({self.total_cpus})."
             )
-            if os.path.isfile(file_path):
-                config_paths.append(file_path)
-                print(f"Found cooperative configuration: {file_path}")
-            else:
-                print(f"No cooperative configuration found for {cpu_count} CPUs.")
-        elif config_type == "competitive":
-            # Competitive configurations are stored in directories like {num_instances}_instances
-            if cpu_count == 0:
-                print("CPU count cannot be zero for competitive configurations.")
-                return config_paths
 
-            num_instances = self.total_cpus // cpu_count
-            instance_dir = os.path.join(
-                self.output_dir, "competitive", f"{num_instances}_instances"
+        ram_allocation = int(self.available_memory * (ram_percent / 100))
+        n_value = self._calculate_problem_size(ram_allocation)
+        ps, qs = self._calculate_ps_qs(cpu_count)
+        nb = 192  # Fixed block size
+
+        if competitive:
+            num_instances = math.ceil(self.total_cpus / cpu_count)
+            ram_per_instance = int(ram_allocation / num_instances)
+            n_value = self._calculate_problem_size(ram_per_instance)
+            self.logger.info(
+                f"Competitive mode: {num_instances} instances each with {cpu_count} CPUs and {ram_per_instance} MB RAM."
             )
-            if not os.path.isdir(instance_dir):
-                print(
-                    f"No competitive configurations directory found for {num_instances} instances."
-                )
-                return config_paths
-
-            # Pattern to match files: hpl_{cpu_count}cpu_instance*.dat
-            pattern = os.path.join(instance_dir, f"hpl_{cpu_count}cpu_instance*.dat")
-            matched_files = glob.glob(pattern)
-            if matched_files:
-                config_paths.extend(matched_files)
-                print(
-                    f"Found {len(matched_files)} competitive configurations for {cpu_count} CPUs."
-                )
-            else:
-                print(
-                    f"No competitive configurations found for {cpu_count} CPUs in {instance_dir}."
-                )
         else:
-            print(
-                f"Invalid configuration type: {config_type}. Use 'cooperative' or 'competitive'."
+            num_instances = 1
+
+        file_name = f"hpl_cpu{cpu_count}_ram{ram_percent}percent_comp{competitive}.dat"
+        config_path = self._generate_hpl_file(file_name, n_value, nb, ps, qs)
+
+        return config_path, num_instances
+
+    def get_custom_config(
+        self, n: int, nb: int, p: int, q: int, competitive: bool
+    ) -> Tuple[Path, int]:
+        """
+        Retrieve configuration based on direct specification of N, NB, P, Q.
+
+        Args:
+            n (int): Problem size N.
+            nb (int): Block size.
+            p (int): Process grid P.
+            q (int): Process grid Q.
+            competitive (bool): Competitive mode flag.
+
+        Returns:
+            Tuple[Path, int]: Path to the configuration file and number of instances.
+        """
+        self.logger.debug(
+            f"Generating custom config with N={n}, NB={nb}, P={p}, Q={q}, Competitive={competitive}"
+        )
+
+        if p * q > self.total_cpus:
+            raise ValueError(
+                f"Process grid P*Q ({p}*{q}={p*q}) exceeds total CPUs ({self.total_cpus})."
             )
 
-        return config_paths
+        if competitive:
+            num_instances = math.ceil(self.total_cpus / (p * q))
+            self.logger.info(
+                f"Competitive mode: {num_instances} instances each with {p*q} CPUs."
+            )
+        else:
+            num_instances = 1
 
-    @staticmethod
-    def install_hpl(script_path: Optional[str] = None):
+        file_name = f"hpl_N{n}_NB{nb}_P{p}_Q{q}.dat"
+        config_path = self._generate_hpl_file(file_name, n, nb, p, q)
+
+        return config_path, num_instances
+
+    def install_hpl(self, script_path: Optional[str] = None):
         """
         Install HPL and its dependencies using a script.
 
         Args:
-            script_path (Optional[str]): Path to the installation script. If not provided, uses the default SCRIPT_PATH.
+            script_path (Optional[str]): Path to the installation script. Defaults to SCRIPT_PATH.
+
+        Raises:
+            FileNotFoundError: If the installation script is not found.
+            subprocess.CalledProcessError: If the installation script fails.
         """
-        script = script_path if script_path else HPLConfig.SCRIPT_PATH
-        print("Starting HPL installation...")
-        if not Path(script).exists():
+        script = Path(script_path) if script_path else self.SCRIPT_PATH
+        self.logger.info(f"Starting HPL installation using script: {script}")
+
+        if not script.exists():
             raise FileNotFoundError(f"Installation script not found: {script}")
+
         try:
-            subprocess.run(["bash", script], check=True)
-            print("HPL installation completed successfully.")
+            subprocess.run(["bash", str(script)], check=True)
+            self.logger.info("HPL installation completed successfully.")
         except subprocess.CalledProcessError as e:
-            print(f"Error during HPL installation: {e}")
+            self.logger.error(f"Error during HPL installation: {e}")
             raise
