@@ -1,0 +1,3 @@
+PROCESSOR: I9 9900KF 
+VM CPU: 2
+VM RAM: 4096 shared 
