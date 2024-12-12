@@ -55,7 +55,7 @@ class HPLConfig:
             logging.error(f"File not found: {filepath}")
             return []
 
-    def get_total_cpus(self) -> int:
+    def _get_total_cpus(self) -> int:
         """
         Fetch the total number of physical CPU cores on the system.
         Returns:
