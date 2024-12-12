@@ -39,11 +39,5 @@ for ((i=1; i<=5; i++)); do
   echo "---"
 done
 
-for ((i=1; i<=5; i++)); do
-  echo "Iteration $i:"
-  submit_task 4 4
-  echo "---"
-done
-
 
 
