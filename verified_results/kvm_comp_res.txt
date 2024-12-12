@@ -92,4 +92,4 @@ WR11C2R4        5000   128     2     4               3.34             2.4988e+01
 Processing directory: 19
 WR11C2R4        5000   128     2     4               3.30             2.5252e+01
 Processing directory: 20
-WR11C2R4        5000   128     2     4               3.37             2.4748e+01c
+WR11C2R4        5000   128     2     4               3.37             2.4748e+01
