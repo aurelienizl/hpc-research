@@ -79,7 +79,7 @@ class HPLInstance:
         cpu_set_str = core_indices
 
         hpl_command = (
-            f"mpirun --use-hwthread-cpus --allow-run-as-root "
+            f"mpirun --allow-run-as-root "
             f"-np {self.process_count} --cpu-set {cpu_set_str} ./xhpl"
         )
 
