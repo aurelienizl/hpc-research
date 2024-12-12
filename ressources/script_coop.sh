@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Global variable for n_value
-n_value=14000
+n_value=5000
 
 # Function to submit a task
 submit_task() {
