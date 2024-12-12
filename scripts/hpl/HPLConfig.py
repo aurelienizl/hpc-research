@@ -55,18 +55,24 @@ class HPLConfig:
             logging.error(f"File not found: {filepath}")
             return []
 
-    def _get_total_cpus(self) -> int:
+    def get_total_cpus(self) -> int:
         """
-        Fetch the total number of CPUs on the system.
-
+        Fetch the total number of physical CPU cores on the system.
         Returns:
-            int: Total number of CPUs.
+        int: Total number of physical CPU cores.
         """
         cpuinfo = self._read_proc_file("/proc/cpuinfo")
-        cpu_count = sum(1 for line in cpuinfo if line.startswith("processor"))
-        self.logger.info(f"Total CPUs detected: {cpu_count}")
+        # Look for 'core id' lines and count unique entries
+        core_ids = set()
+        for line in cpuinfo:
+            if line.startswith("core id"):
+                core_id = line.split(':')[1].strip()
+                core_ids.add(core_id)
+        
+        cpu_count = len(core_ids)
+        self.logger.info(f"Total physical CPU cores detected: {cpu_count}")
         return cpu_count
-
+        
     def _get_memory_info(self) -> Tuple[int, int, int]:
         """
         Fetch memory details from the system.
