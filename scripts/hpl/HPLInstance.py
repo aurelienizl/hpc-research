@@ -74,13 +74,13 @@ class HPLInstance:
         Returns:
             str: The command to run the HPL benchmark.
         """
-        
-        core_start = 0  
+
+        core_start = 0
         core_indices = ",".join(str(core_start + i) for i in range(self.process_count))
         cpu_set_str = core_indices
 
         hpl_command = (
-            f"mpirun --allow-run-as-root -H localhost"
+            f"mpirun --allow-run-as-root "
             f"-np {self.process_count}  --cpu-set {cpu_set_str} ./xhpl"
         )
 

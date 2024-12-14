@@ -3,6 +3,9 @@
 # Find and remove all __pycache__ directories
 sudo find . -type d -name "__pycache__" -exec rm -r {} +
 
+# Remove all .pytest_cache directories
+sudo find . -type d -name ".pytest_cache" -exec rm -r {} +
+
 # Find and remove all .pyc files
 sudo find . -type f -name "*.pyc" -exec rm -f {} +
 
