@@ -10,7 +10,7 @@ sudo find . -type f -name "*.pyc" -exec rm -f {} +
 sudo find . -type f -name "*.txt" -exec rm -f {} +
 
 # Find and remove all HPLConfigurations directories
-sudo find . -type d -name "HPLConfigurations" -exec rm -r {} +
+sudo find . -type d -name "results" -exec rm -r {} +
 
 # Remove the collectl file in /tmp/collectl_pids
 sudo rm -rf /tmp/collectl_pids

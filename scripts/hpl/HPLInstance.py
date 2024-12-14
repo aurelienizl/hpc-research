@@ -22,7 +22,7 @@ class HPLInstance:
         config_path: Path,
         result_dir: Path,
         process_count: int,
-        instance_id: int,
+        instance_id: str,  # Unique per instance
     ):
         """
         Initialize an HPL instance.
@@ -32,7 +32,7 @@ class HPLInstance:
             config_path (Path): Path to the HPL configuration file (HPL.dat).
             result_dir (Path): Directory to save the result files.
             process_count (int): Number of processes to run with mpirun.
-            instance_id (int): Unique identifier for the HPL instance.
+            instance_id (str): Unique identifier for the HPL instance.
         """
         self.instance_type = instance_type
         self.config_path = config_path
@@ -74,14 +74,16 @@ class HPLInstance:
         Returns:
             str: The command to run the HPL benchmark.
         """
-        core_start = self.instance_id * self.process_count
+        
+        core_start = 0  
         core_indices = ",".join(str(core_start + i) for i in range(self.process_count))
         cpu_set_str = core_indices
 
         hpl_command = (
-            f"mpirun --allow-run-as-root "
-            f"-np {self.process_count} --cpu-set {cpu_set_str} ./xhpl"
+            f"mpirun --allow-run-as-root -H localhost"
+            f"-np {self.process_count}  --cpu-set {cpu_set_str} ./xhpl"
         )
+
 
         self.logger.info(f"HPL command: {hpl_command}")
         return hpl_command
