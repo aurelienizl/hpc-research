@@ -1,10 +1,8 @@
 # scheduler.py
 
 import sys
-import subprocess
 from pathlib import Path
 from typing import Optional, Dict
-import logging
 from multiprocessing import Process
 from threading import Lock
 
@@ -24,18 +22,16 @@ class Scheduler:
 
     class TaskAlreadyRunningException(Exception):
         """Exception raised when a task is already running."""
+
         pass
 
-    def __init__(self):
+    def __init__(self, log_interface: LogInterface):
         """
         Initialize the Scheduler.
         """
         self.hpl_config = HPLConfig()
-        self.collectl_interface = CollectlInterface()
-        self.log_interface = LogInterface()
-
-        self.logger = logging.getLogger(self.__class__.__name__)
-        self.logger.info("Scheduler initialized.")
+        self.collectl_interface = CollectlInterface(log_interface)  # Pass LogInterface
+        self.log_interface = log_interface
 
         # Single task tracking
         self.current_task_id: Optional[str] = None
@@ -48,12 +44,12 @@ class Scheduler:
         Exits the program if installation fails.
         """
         try:
-            self.logger.info("Starting dependency installation...")
+            self.log_interface.info("Installing dependencies...")
             self.hpl_config.install_hpl()
             self.collectl_interface.install_collectl()
-            self.logger.info("Dependencies installed successfully.")
+            self.log_interface.info("Dependencies installed successfully.")
         except Exception as e:
-            self.logger.error(f"Failed to install dependencies: {e}")
+            self.log_interface.error(f"Dependency installation failed: {str(e)}")
             sys.exit(1)
 
     def setup_environment(self):
@@ -61,10 +57,16 @@ class Scheduler:
         Set up the necessary environment for running benchmarks.
         """
         # Placeholder for environment setup logic
-        self.logger.info("Environment setup completed.")
+        self.log_interface.info("Environment setup complete.")
 
     def run_hpl_benchmark(
-        self, instance_id: str, ps: int, qs: int, n_value: int, nb: int, instances_num: int
+        self,
+        instance_id: str,
+        ps: int,
+        qs: int,
+        n_value: int,
+        nb: int,
+        instances_num: int,
     ):
         """
         Set up and execute a custom HPL instance.
@@ -79,7 +81,9 @@ class Scheduler:
         """
         with self.status_lock:
             if self.current_task_id is not None:
-                raise Scheduler.TaskAlreadyRunningException("Another task is currently running.")
+                raise Scheduler.TaskAlreadyRunningException(
+                    "Another task is currently running."
+                )
             self.current_task_id = instance_id
             self.task_status[instance_id] = "Running"
 
@@ -92,7 +96,7 @@ class Scheduler:
                 n=n_value, nb=nb, p=ps, q=qs
             )
         except ValueError as ve:
-            self.logger.error(f"Custom configuration error: {ve}")
+            self.log_interface.error(f"Configuration error: {str(ve)}")
             with self.status_lock:
                 self.task_status[instance_id] = "Configuration Error"
                 self.current_task_id = None
@@ -102,11 +106,11 @@ class Scheduler:
         for i in range(1, instances_num + 1):
             unique_instance_id = f"{instance_id}_{i}"
             hpl_instance = HPLInstance(
-                instance_type="custom",
                 config_path=config_path,
                 result_dir=task_result_dir,
                 process_count=ps * qs,
                 instance_id=unique_instance_id,  # Unique instance_id
+                log_interface=self.log_interface,  # Pass LogInterface
             )
             hpl_instances.append(hpl_instance)
 
@@ -132,9 +136,7 @@ class Scheduler:
             self.task_status[instance_id] = "Completed"
             self.current_task_id = None
 
-        self.logger.info(
-            f"Custom HPL instance with Task ID {instance_id} has completed."
-        )
+        self.log_interface.info(f"Task {instance_id} has been completed.")
 
     def _run_instance(self, instance: HPLInstance, instance_id: str):
         """
@@ -147,7 +149,9 @@ class Scheduler:
         try:
             instance.run()
         except Exception as e:
-            self.logger.error(f"Instance {instance.instance_id} failed: {str(e)}")
+            self.log_interface.error(
+                f"Execution error for instance {instance_id}: {str(e)}"
+            )
             with self.status_lock:
                 self.task_status[instance_id] = "Execution Error"
                 self.current_task_id = None
@@ -169,5 +173,5 @@ class Scheduler:
         """
         Gracefully shut down the scheduler.
         """
-        self.logger.info("Shutting down Scheduler...")
+        self.log_interface.info("Shutting down the scheduler.")
         # Implement any necessary cleanup here

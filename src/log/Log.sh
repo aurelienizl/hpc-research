@@ -6,7 +6,7 @@
 # Log script for HPC benchmarking sessions
 # This script handles logging for multiple scripts in a multithreaded environment
 # Usage:
-#   ./log.sh <level> <message> [<log_file>]
+#   ./Log.sh <level> <message> [<log_file>]
 # Levels:
 #   info    - Information messages
 #   warning - Warning messages

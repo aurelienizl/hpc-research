@@ -1,3 +1,5 @@
+# LogInterface.py
+
 import subprocess
 import os
 from typing import Optional
@@ -5,18 +7,16 @@ from typing import Optional
 
 class LogInterface:
     """
-    A Python class to interact with the log.sh shell script for logging.
+    A Python class to interact with the Log.sh shell script for logging.
     """
 
     SCRIPT_PATH = os.path.join(os.path.dirname(__file__), "Log.sh")
 
-
     def __init__(self, verbose: bool = False, log_file: Optional[str] = None):
         """
-        Initializes the ShellLogger with the path to the shell script and verbosity control.
+        Initializes the LogInterface with verbosity control and log file configuration.
 
         Args:
-            script_path (str): Path to the shell script for logging.
             verbose (bool): If True, logs are displayed in real-time.
             log_file (str): Optional log file name. Defaults to log.txt.
         """
@@ -33,14 +33,16 @@ class LogInterface:
         """
         valid_levels = {"info", "warning", "error"}
         if level not in valid_levels:
-            raise ValueError(f"Invalid log level: {level}. Valid levels are: {valid_levels}")
+            raise ValueError(
+                f"Invalid log level: {level}. Valid levels are: {valid_levels}"
+            )
 
         try:
             # If verbose is enabled, do not capture stdout and stderr
             if self.verbose:
                 subprocess.run(
                     [LogInterface.SCRIPT_PATH, level, message, self.log_file],
-                    check=True
+                    check=True,
                 )
             else:
                 # Capture stdout and stderr when verbose is disabled
@@ -49,7 +51,7 @@ class LogInterface:
                     check=True,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
-                    text=True
+                    text=True,
                 )
 
         except subprocess.CalledProcessError as e:

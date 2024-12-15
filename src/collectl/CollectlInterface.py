@@ -1,16 +1,18 @@
+# collectl/CollectlInterface.py
+
 import subprocess
 import os
 from typing import Optional
-
-# Global Variables
+from log.LogInterface import LogInterface  # Import LogInterface
 
 
 class CollectlInterface:
 
     SCRIPT_PATH = os.path.join(os.path.dirname(__file__), "CollectlManager.sh")
 
-    def __init__(self):
-        print("CollectlManager initialized.")
+    def __init__(self, log_interface: LogInterface):
+        self.log_interface = log_interface
+        self.log_interface.info("CollectlManager initialized.")
 
     def _run_command(
         self, command: str, timeout: int = 60
@@ -19,17 +21,17 @@ class CollectlInterface:
         Helper method to run shell commands and handle errors.
         """
         try:
-            print(f"Running command: {command}")
+            self.log_interface.info(f"Running command: {command}")
             result = subprocess.run(
                 command, shell=True, capture_output=True, text=True, timeout=timeout
             )
             result.check_returncode()
             return result
         except subprocess.CalledProcessError as e:
-            print(f"Command failed: {e.stdout}\n{e.stderr}")
+            self.log_interface.error(f"Command failed: {e.stdout}\n{e.stderr}")
             raise RuntimeError(f"Command failed with error: \n{e.stdout}\n{e.stderr}")
         except subprocess.TimeoutExpired:
-            print(f"Command timed out: {command}")
+            self.log_interface.error(f"Command timed out: {command}")
             raise TimeoutError("The command timed out.")
 
     def install_collectl(self) -> str:
@@ -37,14 +39,14 @@ class CollectlInterface:
         Install Collectl using the shell script.
         """
         try:
-            print("Installing Collectl.")
+            self.log_interface.info("Installing Collectl.")
             result = self._run_command(
                 f"{CollectlInterface.SCRIPT_PATH} install", timeout=120
             )
-            print("Collectl installation completed.")
+            self.log_interface.info("Collectl installation completed.")
             return result.stdout
         except Exception as e:
-            print(f"Failed to install Collectl: {e}")
+            self.log_interface.error(f"Failed to install Collectl: {e}")
             return str(e)
 
     def start_collectl(
@@ -57,7 +59,7 @@ class CollectlInterface:
         Start Collectl with a unique ID and optional custom command.
         """
         if not id:
-            print("Error: ID is required to start Collectl.")
+            self.log_interface.error("ID is required to start Collectl.")
             raise ValueError("ID is required to start Collectl.")
 
         command = f"{CollectlInterface.SCRIPT_PATH} start -id {id}"
@@ -67,12 +69,12 @@ class CollectlInterface:
             command += f" -cmd '{custom_command}'"
 
         try:
-            print(f"Starting Collectl with ID: {id}")
+            self.log_interface.info(f"Starting Collectl with ID: {id}")
             result = self._run_command(command)
-            print(f"Collectl started with ID: {id}")
+            self.log_interface.info(f"Collectl started with ID: {id}")
             return result.stdout
         except Exception as e:
-            print(f"Failed to start Collectl with ID {id}: {e}")
+            self.log_interface.error(f"Failed to start Collectl with ID {id}: {e}")
             return str(e)
 
     def stop_collectl(self, id: str) -> str:
@@ -80,17 +82,17 @@ class CollectlInterface:
         Stop Collectl using a unique ID.
         """
         if not id:
-            print("Error: ID is required to stop Collectl.")
+            self.log_interface.error("ID is required to stop Collectl.")
             raise ValueError("ID is required to stop Collectl.")
 
         command = f"{CollectlInterface.SCRIPT_PATH} stop -id {id}"
         try:
-            print(f"Stopping Collectl with ID: {id}")
+            self.log_interface.info(f"Stopping Collectl with ID: {id}")
             result = self._run_command(command)
-            print(f"Collectl stopped with ID: {id}")
+            self.log_interface.info(f"Collectl stopped with ID: {id}")
             return result.stdout
         except Exception as e:
-            print(f"Failed to stop Collectl with ID {id}: {e}")
+            self.log_interface.error(f"Failed to stop Collectl with ID {id}: {e}")
             return str(e)
 
     def is_collectl_running(self, id: str) -> bool:
@@ -103,9 +105,9 @@ class CollectlInterface:
                 pid = int(file.read().strip())
                 running = os.path.exists(f"/proc/{pid}")
                 if running:
-                    print(f"Collectl is running with ID: {id}")
+                    self.log_interface.info(f"Collectl is running with ID: {id}")
                 else:
-                    print(f"Collectl is not running with ID: {id}")
+                    self.log_interface.info(f"Collectl is not running with ID: {id}")
                 return running
-        print(f"PID file not found for ID: {id}")
+        self.log_interface.info(f"PID file not found for ID: {id}")
         return False

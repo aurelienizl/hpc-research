@@ -14,6 +14,6 @@ fi
 # Clean up
 sudo bash clean.sh
 
-cd scripts
+cd src
 sudo python3 server.py
 cd ..

@@ -6,7 +6,7 @@ import shutil
 import subprocess
 from pathlib import Path
 from typing import Optional
-import logging
+from log.LogInterface import LogInterface  # Import LogInterface
 
 
 class HPLInstance:
@@ -18,36 +18,34 @@ class HPLInstance:
 
     def __init__(
         self,
-        instance_type: str,
         config_path: Path,
         result_dir: Path,
         process_count: int,
         instance_id: str,  # Unique per instance
+        log_interface: LogInterface,  # Add LogInterface as a parameter
     ):
         """
         Initialize an HPL instance.
 
         Args:
-            instance_type (str): Type of the HPL instance (e.g., 'cooperative' or 'custom').
             config_path (Path): Path to the HPL configuration file (HPL.dat).
             result_dir (Path): Directory to save the result files.
             process_count (int): Number of processes to run with mpirun.
             instance_id (str): Unique identifier for the HPL instance.
+            log_interface (LogInterface): Logging interface instance.
         """
-        self.instance_type = instance_type
         self.config_path = config_path
         self.result_dir = result_dir
         self.process_count = process_count
         self.instance_id = instance_id
 
         self.result_file = (
-            self.result_dir
-            / f"hpl_{self.instance_type}_{self.process_count}_{self.instance_id}.result"
+            self.result_dir / f"hpl_{self.process_count}_{self.instance_id}.result"
         )
         self.working_dir = Path(f"/tmp/hpl_instance/{self.instance_id}")
         self.hpl_binary = Path(self.DEFAULT_HPL_BINARY)
 
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger = log_interface  # Use LogInterface for logging
         self.logger.info(f"Initializing HPL instance ID {self.instance_id}")
 
         self._prepare_environment()
@@ -74,16 +72,10 @@ class HPLInstance:
         Returns:
             str: The command to run the HPL benchmark.
         """
-
-        core_start = 0
-        core_indices = ",".join(str(core_start + i) for i in range(self.process_count))
-        cpu_set_str = core_indices
-
-        hpl_command = (
-            f"mpirun --allow-run-as-root "
-            f"-np {self.process_count}  --cpu-set {cpu_set_str} ./xhpl"
-        )
-
+        if self.process_count >= 2:
+            hpl_command = f"mpirun --allow-run-as-root --bind-to socket -np {self.process_count} {self.hpl_binary}"
+        else:
+            hpl_command = f"{self.hpl_binary}"
 
         self.logger.info(f"HPL command: {hpl_command}")
         return hpl_command
@@ -100,7 +92,7 @@ class HPLInstance:
             with open(self.result_file, "w") as result:
                 subprocess.run(
                     cmd,
-                    shell=True,  # Use shell=True if cmd is a string
+                    shell=True,
                     check=True,
                     cwd=self.working_dir,
                     stdout=result,
@@ -113,6 +105,7 @@ class HPLInstance:
             self.logger.error(
                 f"HPL execution failed for instance ID {self.instance_id}: {e}"
             )
+            raise  # Re-raise exception to be handled by Scheduler
         finally:
             self._cleanup_environment()
 
