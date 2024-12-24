@@ -15,12 +15,12 @@ if [ -z "$MASTER_IP" ]; then
 fi
 
 export MASTER_IP=127.0.0.1
-export MASTER_PORT=5000
-export MASTER_API_KEY=123456
+export MASTER_PORT=8000
+export MASTER_API_KEY=12345678
 
 export API_HOST=0.0.0.0
 export API_PORT=5000
-export API_KEY=123456
+export API_KEY=12345678
 
 cd src
 sudo -E python3 server.py

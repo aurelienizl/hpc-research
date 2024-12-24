@@ -141,7 +141,7 @@ def main():
     app = create_app(worker, log)
 
     try:
-        app.run(host=API_HOST, port=API_PORT, threaded=True, ssl_context='adhoc')
+        app.run(host=API_HOST, port=API_PORT, threaded=True)
     except KeyboardInterrupt:
         worker.shutdown()
         log.info("Server shutdown via KeyboardInterrupt.")

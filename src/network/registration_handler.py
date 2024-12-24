@@ -26,7 +26,7 @@ class RegistrationHandler:
         self.node_port = node_port
         self.log = log_interface
         self.additional_info = additional_info or {}
-        self.register_endpoint = f"https://{self.master_ip}:{self.master_port}/register"
+        self.register_endpoint = f"http://{self.master_ip}:{self.master_port}/register"
 
     def collect_system_metrics(self) -> Dict[str, Any]:
         try:
