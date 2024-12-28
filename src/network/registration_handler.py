@@ -13,7 +13,6 @@ class RegistrationHandler:
         self,
         master_ip: str,
         master_port: int,
-        master_api_key: str,
         node_ip: str,
         node_port: int,
         log_interface: LogInterface,
@@ -21,7 +20,6 @@ class RegistrationHandler:
     ):
         self.master_ip = master_ip
         self.master_port = master_port
-        self.master_api_key = master_api_key
         self.node_ip = node_ip
         self.node_port = node_port
         self.log = log_interface
@@ -67,11 +65,6 @@ class RegistrationHandler:
         if not metrics:
             self.log.error("No metrics collected. Cannot register node.")
             return False
-
-        headers = {
-            "Authorization": f"Bearer {self.master_api_key}",
-            "Content-Type": "application/json"
-        }
 
         try:
             self.log.info(f"Attempting to register node with master at {self.register_endpoint}...")

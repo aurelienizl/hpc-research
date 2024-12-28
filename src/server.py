@@ -8,25 +8,19 @@ from worker import Worker
 from scheduler import Scheduler
 from log.LogInterface import LogInterface
 from network.registration_handler import RegistrationHandler
-from network.auth_middleware import AuthMiddleware
 
 # Server Configuration Constants
 API_HOST = os.getenv("API_HOST", "127.0.0.1")
 API_PORT = int(os.getenv("API_PORT", 5000))
-API_KEY = os.getenv("API_KEY", "")
-TRUSTED_IPS = os.getenv("TRUSTED_IPS", "").split(",")
 
 # Master Configuration Constants
 MASTER_IP = os.getenv("MASTER_IP", "")
 MASTER_PORT = int(os.getenv("MASTER_PORT", 5000))
-MASTER_API_KEY = os.getenv("MASTER_API_KEY", "")
 
 def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
     app = Flask(__name__)
-    auth = AuthMiddleware(API_KEY, TRUSTED_IPS)
 
     @app.route("/submit_custom_task", methods=["POST"])
-    @auth.require_auth
     def submit_custom_task():
         data: Dict[str, Any] = request.get_json()
         if not data:
@@ -61,7 +55,6 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
         return jsonify({"error": "Resource busy. Another benchmark is currently running."}), 409
 
     @app.route("/task_status/<task_id>", methods=["GET"])
-    @auth.require_auth
     def task_status_endpoint(task_id: str):
         status = worker.get_status(task_id)
         if status is None:
@@ -70,7 +63,6 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
         return jsonify({"task_id": task_id, "status": status}), 200
 
     @app.route("/get_results/<task_id>", methods=["GET"])
-    @auth.require_auth
     def get_results(task_id: str):
         result_dir = worker.scheduler.RESULT_DIR / task_id
         if not result_dir.exists() or not result_dir.is_dir():
@@ -95,9 +87,8 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
         return jsonify({"task_id": task_id, "results": results}), 200
 
     @app.route("/ping", methods=["POST"])
-    @auth.require_auth
     def ping():
-        return "pong"
+        return jsonify({"message": "pong"}), 200
 
     return app
 
@@ -105,7 +96,6 @@ def main():
     print("Environment Variables:")
     print(f"API_HOST: {API_HOST}")
     print(f"API_PORT: {API_PORT}")
-    print(f"TRUSTED_IPS: {TRUSTED_IPS}")
     print(f"MASTER_IP: {MASTER_IP}")
     print(f"MASTER_PORT: {MASTER_PORT}")
 
@@ -124,7 +114,6 @@ def main():
     registration_handler = RegistrationHandler(
         master_ip=MASTER_IP,
         master_port=MASTER_PORT,
-        master_api_key=MASTER_API_KEY,
         node_ip=API_HOST,
         node_port=API_PORT,
         log_interface=log,
@@ -134,9 +123,9 @@ def main():
         },
     )
 
-    if not registration_handler.register_node():
-        log.error("Node registration failed. Shutting down the server.")
-        sys.exit(1)
+    #if not registration_handler.register_node():
+    #    log.error("Node registration failed. Shutting down the server.")
+    #    sys.exit(1)
 
     app = create_app(worker, log)
 

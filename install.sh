@@ -16,7 +16,7 @@ sudo bash clean.sh
 sudo apt-get update && sudo apt-get upgrade -y
 
 # Install python3 and python3-flask
-sudo apt-get install -y python3 python3-flask
+sudo apt-get install -y python3 python3-flask python3-requests python3-psutil
 
 # Verify installation
 python3 --version
