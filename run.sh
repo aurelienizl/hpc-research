@@ -1,27 +1,28 @@
-#!/bin/bash
-
-if [ "$EUID" -ne 0 ]
-  then echo "Please run as root"
-  exit
+#! /bin/bash
+if [ "$EUID" -ne 0 ]; then
+   echo "Please run as root"
+   exit 1
 fi
+
+# Check python3
+if [ -z "$(which python3)" ]; then
+   echo "Please install python3"
+   exit 1
+fi
+
+# Create and activate virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install requirements
+pip install -r requirements.txt
 
 # Clean up
 sudo bash clean.sh
 
-MASTER_IP=$(hostname -I | awk '{print $1}')
-if [ -z "$MASTER_IP" ]; then
-  echo "Error: Unable to determine MASTER_IP. Please set it manually."
-  exit 1
-fi
-
-export MASTER_IP=127.0.0.1
-export MASTER_PORT=8000
-export MASTER_API_KEY=12345678
-
-export API_HOST=0.0.0.0
-export API_PORT=5000
-export API_KEY=12345678
-
+# Run server
 cd src
-sudo -E python3 server.py
+python3 server.py
 cd ..
+
+deactivate

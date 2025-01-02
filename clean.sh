@@ -10,7 +10,7 @@ sudo find . -type d -name ".pytest_cache" -exec rm -r {} +
 sudo find . -type f -name "*.pyc" -exec rm -f {} +
 
 # Find and remove all .txt files
-sudo find . -type f -name "*.txt" -exec rm -f {} +
+sudo find . -type f -name "log.txt" -exec rm -f {} +
 
 # Find and remove all HPLConfigurations directories
 sudo find . -type d -name "results" -exec rm -r {} +
