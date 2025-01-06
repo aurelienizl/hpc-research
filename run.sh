@@ -1,4 +1,7 @@
 #! /bin/bash
+
+set -e
+
 if [ "$EUID" -ne 0 ]; then
    echo "Please run as root"
    exit 1
@@ -9,6 +12,8 @@ if [ -z "$(which python3)" ]; then
    echo "Please install python3"
    exit 1
 fi
+
+sudo apt update && sudo apt install python3-venv -y
 
 # Create and activate virtual environment
 python3 -m venv venv
