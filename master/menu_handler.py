@@ -61,31 +61,35 @@ class MenuHandler:
             "instances_num": int(input("Enter instances number: ")),
         }
 
-    def _run_node_benchmark(
-        self, node: Dict, params: Dict[str, int], benchmark_dir: Path
-    ) -> None:
+    def _run_node_benchmark(self, node: Dict, params: Dict[str, int], benchmark_dir: Path) -> None:
         ip = node["ip"]
         port = node["data"].get("metrics", {}).get("node_port", 5000)
         node_api = NodeAPI(ip, port)
-
         task_id = node_api.submit_benchmark(**params)
         if not task_id:
             print(f"Failed to submit benchmark for {ip}")
             return
-
         node_dir = benchmark_dir / ip
         node_dir.mkdir(exist_ok=True)
-
-        for _ in range(10):
+        print(f"Monitoring benchmark for {ip}...")
+        while True:
             time.sleep(5)
             status = node_api.check_status(task_id)
-            if status and status.lower() == "completed":
+            if not status:
+                print(f"Failed to get status for {ip}")
+                return
+            status = status.lower()
+            if status == "completed":
                 if node_api.get_results(task_id, node_dir):
                     print(f"Completed benchmark for {ip} - Task ID: {task_id}")
                     self.benchmark_results[ip] = task_id
                 return
-
-        print(f"Benchmark timed out for {ip}")
+            elif status == "running":
+                print(f"Benchmark still running for {ip}...")
+                continue
+            else:
+                print(f"Unexpected status '{status}' for {ip}")
+                return
 
     def run(self) -> None:
         while True:
