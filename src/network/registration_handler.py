@@ -71,7 +71,6 @@ class RegistrationHandler:
             response = requests.post(
                 self.register_endpoint,
                 json={"metrics": metrics},
-                headers=headers,
                 timeout=10,
                 verify=False
             )

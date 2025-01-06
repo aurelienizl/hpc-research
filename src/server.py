@@ -123,9 +123,9 @@ def main():
         },
     )
 
-    #if not registration_handler.register_node():
-    #    log.error("Node registration failed. Shutting down the server.")
-    #    sys.exit(1)
+    if not registration_handler.register_node():
+        log.error("Node registration failed. Shutting down the server.")
+        sys.exit(1)
 
     app = create_app(worker, log)
 
