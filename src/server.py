@@ -14,7 +14,7 @@ API_HOST = os.getenv("API_HOST", "0.0.0.0")
 API_PORT = int(os.getenv("API_PORT", 5000))
 
 # Master Configuration Constants
-MASTER_IP = os.getenv("MASTER_IP", "127.0.0.1")
+MASTER_IP = os.getenv("MASTER_IP", "82.64.59.78")
 MASTER_PORT = int(os.getenv("MASTER_PORT", 8000))
 
 def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
