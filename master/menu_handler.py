@@ -86,10 +86,15 @@ class MenuHandler:
     def _launch_node_benchmarks(self, params: Dict[str, int], benchmark_dir: Path) -> Dict:
         """Launch benchmarks on all nodes and return active tasks"""
         active_tasks = {}
+        
         for node in self.nodes:
             ip = node["ip"]
             port = node["data"].get("metrics", {}).get("node_port", 5000)
             node_api = NodeAPI(ip, port)
+            
+            # Add delay between node submissions
+            if active_tasks:
+                time.sleep(5)  # Wait 5 seconds between node submissions
             
             task_id = node_api.submit_benchmark(**params)
             if task_id:
@@ -120,7 +125,16 @@ class MenuHandler:
                     completed_nodes.append(ip)
                     continue
                 
-                self._handle_benchmark_status(ip, status.lower(), task_info, completed_nodes)
+                if status.lower() == "completed":
+                    if task_info['api'].get_results(task_info['task_id'], task_info['dir']):
+                        print(f"Completed benchmark for {ip} - Task ID: {task_info['task_id']}")
+                        self.benchmark_results[ip] = task_info['task_id']
+                    completed_nodes.append(ip)
+                elif status.lower() == "running":
+                    print(f"Benchmark still running for {ip}...")
+                else:
+                    print(f"Unexpected status '{status}' for {ip}")
+                    completed_nodes.append(ip)
             
             for ip in completed_nodes:
                 active_tasks.pop(ip)
@@ -162,9 +176,19 @@ class MenuHandler:
         for i in range(iterations):
             print(f"\nStarting benchmark iteration {i+1}/{iterations}")
             benchmark_dir = self._setup_benchmark_environment()
+            
+            # Wait longer between iterations to ensure nodes are ready
+            if i > 0:
+                print("Waiting for nodes to be ready...")
+                time.sleep(15)  # 15 seconds between iterations
+            
             active_tasks = self._launch_node_benchmarks(params, benchmark_dir)
             self._monitor_benchmarks(active_tasks)
-            time.sleep(5)  # Brief pause between iterations
+            
+            # Additional wait after completing all tasks in an iteration
+            if i < iterations - 1:
+                print("\nCompleted iteration, waiting before next run...")
+                time.sleep(10)
         
         print(f"\nCompleted {iterations} benchmark iterations!")
     
