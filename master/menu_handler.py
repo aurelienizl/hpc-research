@@ -16,7 +16,8 @@ class MenuHandler:
         self.commands = {
             "1": ("Display registered nodes", self.display_nodes),
             "2": ("Launch benchmark", self.run_benchmarks),
-            "3": ("Exit", lambda: True),
+            "3": ("Launch automatic benchmark", self.run_automatic_benchmarks),
+            "4": ("Exit", lambda: True),
         }
 
     def register_node(self, ip: str, data: Dict) -> Dict:
@@ -59,6 +60,21 @@ class MenuHandler:
                     print(f"Invalid input. Please enter a number for {param}")
         
         return params
+    
+    def _get_automatic_benchmark_params(self) -> Dict:
+        """Get parameters for automatic benchmark"""
+        while True:
+            try:
+                iterations = int(input("Enter number of benchmark iterations: "))
+                if iterations > 0:
+                    break
+                print("Please enter a positive number")
+            except ValueError:
+                print("Invalid input. Please enter a number")
+        
+        params = self._get_benchmark_params()
+        return {"iterations": iterations, **params}
+
 
     def _setup_benchmark_environment(self) -> Path:
         """Create and return the benchmark directory"""
@@ -70,7 +86,6 @@ class MenuHandler:
     def _launch_node_benchmarks(self, params: Dict[str, int], benchmark_dir: Path) -> Dict:
         """Launch benchmarks on all nodes and return active tasks"""
         active_tasks = {}
-        
         for node in self.nodes:
             ip = node["ip"]
             port = node["data"].get("metrics", {}).get("node_port", 5000)
@@ -134,6 +149,25 @@ class MenuHandler:
         active_tasks = self._launch_node_benchmarks(params, benchmark_dir)
         self._monitor_benchmarks(active_tasks)
         print("\nAll benchmarks completed!")
+
+    def run_automatic_benchmarks(self) -> None:
+        """Run benchmarks multiple times automatically"""
+        if not self.nodes:
+            print("No nodes registered")
+            return
+
+        params = self._get_automatic_benchmark_params()
+        iterations = params.pop("iterations")
+        
+        for i in range(iterations):
+            print(f"\nStarting benchmark iteration {i+1}/{iterations}")
+            benchmark_dir = self._setup_benchmark_environment()
+            active_tasks = self._launch_node_benchmarks(params, benchmark_dir)
+            self._monitor_benchmarks(active_tasks)
+            time.sleep(5)  # Brief pause between iterations
+        
+        print(f"\nCompleted {iterations} benchmark iterations!")
+    
 
     def clear_screen(self) -> None:
         """Clear the terminal screen"""
