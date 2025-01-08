@@ -14,38 +14,45 @@ API_HOST = os.getenv("API_HOST", "0.0.0.0")
 API_PORT = int(os.getenv("API_PORT", 5000))
 
 # Master Configuration Constants
-MASTER_IP = os.getenv("MASTER_IP", "192.168.8.217")
+MASTER_IP = os.getenv("MASTER_IP", "127.0.0.1")
 MASTER_PORT = int(os.getenv("MASTER_PORT", 8000))
+
+def safe_endpoint(log_interface):
+    """Decorator for generic error handling in Flask endpoints."""
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                log_interface.error(f"Unhandled exception in endpoint {func.__name__}: {str(e)}")
+                return jsonify({"error": "Internal Server Error"}), 500
+        wrapper.__name__ = func.__name__
+        return wrapper
+    return decorator
 
 def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
     app = Flask(__name__)
 
     @app.route("/submit_custom_task", methods=["POST"])
+    @safe_endpoint(log_interface)
     def submit_custom_task():
         data: Dict[str, Any] = request.get_json()
         if not data:
             log_interface.warning("Received invalid JSON payload.")
             return jsonify({"error": "Invalid JSON payload."}), 400
 
-        ps = data.get("ps")
-        qs = data.get("qs")
-        n_value = data.get("n_value")
-        nb = data.get("nb")
-        instances_num = data.get("instances_num")
+        # Extract and validate parameters
+        required_params = ["ps", "qs", "n_value", "nb", "instances_num"]
+        for param in required_params:
+            if not isinstance(data.get(param), int) or data.get(param) <= 0:
+                log_interface.warning(f"Validation failed for parameter: {param}.")
+                return jsonify({"error": f"'{param}' must be a positive integer."}), 400
 
-        if not all(
-            isinstance(param, int) and param > 0
-            for param in [ps, qs, n_value, nb, instances_num]
-        ):
-            log_interface.warning("Validation failed for input parameters.")
-            return (
-                jsonify(
-                    {
-                        "error": "'ps', 'qs', 'n_value', 'nb', and 'instances_num' must be positive integers."
-                    }
-                ),
-                400,
-            )
+        ps = data["ps"]
+        qs = data["qs"]
+        n_value = data["n_value"]
+        nb = data["nb"]
+        instances_num = data["instances_num"]
 
         task_id = uuid.uuid4().hex
         success = worker.submit_task(task_id, ps, qs, n_value, nb, instances_num)
@@ -55,14 +62,16 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
         return jsonify({"error": "Resource busy. Another benchmark is currently running."}), 409
 
     @app.route("/task_status/<task_id>", methods=["GET"])
+    @safe_endpoint(log_interface)
     def task_status_endpoint(task_id: str):
-        status = worker.get_status(task_id)
+        status = worker.scheduler.get_task_status(task_id)
         if status is None:
             log_interface.info(f"Status check failed: Task ID {task_id} not found.")
             return jsonify({"error": "Task ID not found."}), 404
         return jsonify({"task_id": task_id, "status": status}), 200
 
     @app.route("/get_results/<task_id>", methods=["GET"])
+    @safe_endpoint(log_interface)
     def get_results(task_id: str):
         result_dir = worker.scheduler.RESULT_DIR / task_id
         if not result_dir.exists() or not result_dir.is_dir():
@@ -77,8 +86,7 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
         results: List[Dict[str, Any]] = []
         for file_path in result_files:
             try:
-                with open(file_path, "r") as file:
-                    content = file.read()
+                content = file_path.read_text()
                 results.append({"filename": file_path.name, "content": content})
             except Exception as e:
                 log_interface.error(f"Error reading file {file_path}: {str(e)}")
@@ -87,6 +95,7 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
         return jsonify({"task_id": task_id, "results": results}), 200
 
     @app.route("/ping", methods=["POST"])
+    @safe_endpoint(log_interface)
     def ping():
         return jsonify({"message": "pong"}), 200
 
@@ -132,12 +141,12 @@ def main():
     try:
         app.run(host=API_HOST, port=API_PORT, threaded=True)
     except KeyboardInterrupt:
-        worker.shutdown()
+        worker.scheduler.shutdown()
         log.info("Server shutdown via KeyboardInterrupt.")
         sys.exit(0)
     except Exception as e:
         log.error(f"Server encountered an error: {e}")
-        worker.shutdown()
+        worker.scheduler.shutdown()
         sys.exit(1)
 
 if __name__ == "__main__":

@@ -80,11 +80,7 @@ class Scheduler:
             instances_num (int): Number of HPL instances to run.
         """
         with self.status_lock:
-            if self.current_task_id is not None:
-                raise Scheduler.TaskAlreadyRunningException(
-                    "Another task is currently running."
-                )
-            self.current_task_id = instance_id
+        # Assume Worker has set current_task_id. Just update status.
             self.task_status[instance_id] = "Running"
 
         self.RESULT_DIR.mkdir(parents=True, exist_ok=True)
