@@ -75,14 +75,6 @@ class MenuHandler:
         params = self._get_benchmark_params()
         return {"iterations": iterations, **params}
 
-
-    def _setup_benchmark_environment(self) -> Path:
-        """Create and return the benchmark directory"""
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        benchmark_dir = Path(f"benchmarks/benchmark_{timestamp}")
-        benchmark_dir.mkdir(parents=True, exist_ok=True)
-        return benchmark_dir
-
     def _launch_node_benchmarks(self, params: Dict[str, int], benchmark_dir: Path) -> Dict:
         """Launch benchmarks on all nodes and return active tasks"""
         active_tasks = {}
@@ -139,30 +131,12 @@ class MenuHandler:
             for ip in completed_nodes:
                 active_tasks.pop(ip)
 
-    def _handle_benchmark_status(self, ip: str, status: str, task_info: Dict, completed_nodes: List[str]) -> None:
-        """Handle different benchmark status cases"""
-        if status == "completed":
-            if task_info['api'].get_results(task_info['task_id'], task_info['dir']):
-                print(f"Completed benchmark for {ip} - Task ID: {task_info['task_id']}")
-                self.benchmark_results[ip] = task_info['task_id']
-            completed_nodes.append(ip)
-        elif status == "running":
-            print(f"Benchmark still running for {ip}...")
-        else:
-            print(f"Unexpected status '{status}' for {ip}")
-            completed_nodes.append(ip)
-
-    def run_benchmarks(self) -> None:
-        """Main benchmark execution flow"""
-        if not self.nodes:
-            print("No nodes registered")
-            return
-
-        params = self._get_benchmark_params()
-        benchmark_dir = self._setup_benchmark_environment()
-        active_tasks = self._launch_node_benchmarks(params, benchmark_dir)
-        self._monitor_benchmarks(active_tasks)
-        print("\nAll benchmarks completed!")
+    def _setup_benchmark_environment(self) -> Path:
+        """Create and return the benchmark directory"""
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        benchmark_dir = Path(f"benchmarks/benchmark_{timestamp}")
+        benchmark_dir.mkdir(parents=True, exist_ok=True)
+        return benchmark_dir
 
     def run_automatic_benchmarks(self) -> None:
         """Run benchmarks multiple times automatically"""
@@ -191,7 +165,31 @@ class MenuHandler:
                 time.sleep(10)
         
         print(f"\nCompleted {iterations} benchmark iterations!")
-    
+
+    def _handle_benchmark_status(self, ip: str, status: str, task_info: Dict, completed_nodes: List[str]) -> None:
+        """Handle different benchmark status cases"""
+        if status == "completed":
+            if task_info['api'].get_results(task_info['task_id'], task_info['dir']):
+                print(f"Completed benchmark for {ip} - Task ID: {task_info['task_id']}")
+                self.benchmark_results[ip] = task_info['task_id']
+            completed_nodes.append(ip)
+        elif status == "running":
+            print(f"Benchmark still running for {ip}...")
+        else:
+            print(f"Unexpected status '{status}' for {ip}")
+            completed_nodes.append(ip)
+
+    def run_benchmarks(self) -> None:
+        """Main benchmark execution flow"""
+        if not self.nodes:
+            print("No nodes registered")
+            return
+
+        params = self._get_benchmark_params()
+        benchmark_dir = self._setup_benchmark_environment()
+        active_tasks = self._launch_node_benchmarks(params, benchmark_dir)
+        self._monitor_benchmarks(active_tasks)
+        print("\nAll benchmarks completed!")
 
     def clear_screen(self) -> None:
         """Clear the terminal screen"""
