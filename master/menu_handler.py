@@ -158,5 +158,7 @@ menu_handler = MenuHandler()
 @app.route("/register", methods=["POST"])
 def register():
     node_data = request.get_json() or {}
-    node_entry = menu_handler.register_node(request.remote_addr, node_data)
+    node_ip = request.remote_addr  # Directly obtain the client's IP
+    print(node_ip)
+    node_entry = menu_handler.register_node(node_ip, node_data)
     return jsonify({"status": "registered", "node": node_entry}), 200

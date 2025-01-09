@@ -123,7 +123,6 @@ def main():
     registration_handler = RegistrationHandler(
         master_ip=MASTER_IP,
         master_port=MASTER_PORT,
-        node_ip=API_HOST,
         node_port=API_PORT,
         log_interface=log,
         additional_info={

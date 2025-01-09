@@ -13,14 +13,12 @@ class RegistrationHandler:
         self,
         master_ip: str,
         master_port: int,
-        node_ip: str,
         node_port: int,
         log_interface: LogInterface,
         additional_info: Dict[str, Any] = None,
     ):
         self.master_ip = master_ip
         self.master_port = master_port
-        self.node_ip = node_ip
         self.node_port = node_port
         self.log = log_interface
         self.additional_info = additional_info or {}
@@ -29,7 +27,6 @@ class RegistrationHandler:
     def collect_system_metrics(self) -> Dict[str, Any]:
         try:
             metrics = {
-                "node_ip": self.node_ip,
                 "node_port": self.node_port,
                 "cpu_count": psutil.cpu_count(logical=True),
                 "total_ram_gb": round(psutil.virtual_memory().total / (1024 ** 3), 2),
