@@ -13,8 +13,6 @@ if [ -z "$(which python3)" ]; then
    exit 1
 fi
 
-sudo apt update && sudo apt install python3-venv -y
-
 # Create and activate virtual environment
 python3 -m venv venv
 source venv/bin/activate
@@ -26,8 +24,13 @@ pip install -r requirements.txt
 sudo bash clean.sh
 
 # Run server
-cd src
-python3 server.py
+if [ "$1" == "--node" ]; then
+   cd src/node
+   python3 server.py
+else
+   cd src/master
+   python3 master.py
+fi
 cd ..
 
 deactivate
