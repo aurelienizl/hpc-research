@@ -13,6 +13,8 @@ if [ -z "$(which python3)" ]; then
    exit 1
 fi
 
+sudo apt install curl python3-venv
+
 # Create and activate virtual environment
 python3 -m venv venv
 source venv/bin/activate
