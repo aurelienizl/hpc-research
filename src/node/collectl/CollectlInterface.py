@@ -34,21 +34,6 @@ class CollectlInterface:
             self.log_interface.error(f"Command timed out: {command}")
             raise TimeoutError("The command timed out.")
 
-    def install_collectl(self) -> str:
-        """
-        Install Collectl using the shell script.
-        """
-        try:
-            self.log_interface.info("Installing Collectl.")
-            result = self._run_command(
-                f"{CollectlInterface.SCRIPT_PATH} install", timeout=120
-            )
-            self.log_interface.info("Collectl installation completed.")
-            return result.stdout
-        except Exception as e:
-            self.log_interface.error(f"Failed to install Collectl: {e}")
-            return str(e)
-
     def start_collectl(
         self,
         id: str,

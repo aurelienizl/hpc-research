@@ -49,65 +49,6 @@ parse_arguments() {
     done
 }
 
-install_collectl() {
-    echo "Checking if Collectl is installed..."
-
-    # Check if collectl is already installed
-    if command -v collectl &>/dev/null; then
-        echo "Collectl is already installed."
-    else
-        # Collectl not found, proceed with installation
-        echo "Collectl not found. Installing Collectl..."
-
-        # Download Collectl 4.3.1 tar.gz using curl
-        echo "Downloading Collectl 4.3.1 source tarball..."
-
-        # Remove if /tmp/collectl-4.3.1.src.tar.gz already exists
-        if [ -f /tmp/collectl-4.3.1.src.tar.gz ]; then
-            rm -f /tmp/collectl-4.3.1.src.tar.gz
-        fi
-
-        # Download with curl
-        curl -L https://kumisystems.dl.sourceforge.net/project/collectl/collectl/collectl-4.3.1/collectl-4.3.1.src.tar.gz -o /tmp/collectl-4.3.1.src.tar.gz
-
-        # Check if download was successful
-        if [ $? -ne 0 ]; then
-            echo "Error: Failed to download Collectl tarball."
-            return 1
-        fi
-
-        # Extract the tarball
-        echo "Extracting Collectl 4.3.1 tarball..."
-        tar -xvzf /tmp/collectl-4.3.1.src.tar.gz -C /tmp
-
-        # Check if extraction was successful
-        if [ $? -ne 0 ]; then
-            echo "Error: Failed to extract Collectl tarball."
-            return 1
-        fi
-
-        # Change to the Collectl source directory
-        cd /tmp/collectl-4.3.1/
-
-        # Run the installation
-        echo "Running Collectl installation..."
-        bash INSTALL
-
-        # Check if installation was successful
-        if [ $? -ne 0 ]; then
-            echo "Error: Collectl installation failed."
-            return 1
-        fi
-
-        # Clean up downloaded and extracted files
-        echo "Cleaning up installation files..."
-        rm -rf /tmp/collectl-4.3.1.src.tar.gz
-        rm -rf /tmp/collectl-4.3.1.src
-
-        echo "Collectl installation completed successfully."
-    fi
-}
-
 # Function to start Collectl
 start_collectl() {
     if [[ -z "$ID" ]]; then
@@ -178,9 +119,6 @@ stop_collectl() {
 parse_arguments "$@"
 
 case $COMMAND in
-install)
-    install_collectl
-    ;;
 start)
     start_collectl
     ;;

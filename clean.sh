@@ -15,6 +15,9 @@ sudo find . -type f -name "log.txt" -exec rm -f {} +
 # Find and remove all HPLConfigurations directories
 sudo find . -type d -name "results" -exec rm -r {} +
 
+# Find and remove all HPLConfigurations directories
+sudo find . -type d -name "benchmarks" -exec rm -r {} +
+
 # Remove the collectl file in /tmp/collectl_pids
 sudo rm -rf /tmp/collectl_pids
 
