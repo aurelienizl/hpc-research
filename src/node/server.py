@@ -14,7 +14,7 @@ API_HOST = os.getenv("API_HOST", "0.0.0.0")
 API_PORT = int(os.getenv("API_PORT", 5000))
 
 # Master Configuration Constants
-MASTER_IP = os.getenv("MASTER_IP", "192.168.1.116")
+MASTER_IP = os.getenv("MASTER_IP", "127.0.0.1")
 MASTER_PORT = int(os.getenv("MASTER_PORT", 8000))
 
 def safe_endpoint(log_interface):
@@ -112,12 +112,6 @@ def main():
     log.log("info", "Starting server...")
 
     scheduler = Scheduler(log)
-    try:
-        scheduler.install_dependencies()
-        scheduler.setup_environment()
-    except Exception as e:
-        log.error(f"Scheduler initialization failed: {e}")
-        sys.exit(1)
 
     worker = Worker(scheduler, log)
     registration_handler = RegistrationHandler(

@@ -44,18 +44,17 @@ class RegistrationHandler:
             self.log.error(f"Error collecting system metrics: {e}")
             return {}
 
-    def register_node(self, max_retries: int = 3, backoff_factor: float = 2.0) -> bool:
+    def register_node(self, max_retries: int = 10) -> bool:
         attempt = 0
         while attempt < max_retries:
             success = self._attempt_registration()
             if success:
                 return True
             attempt += 1
-            wait_time = backoff_factor ** attempt
-            self.log.warning(f"Registration attempt {attempt} failed. Retrying in {wait_time} seconds...")
-            time.sleep(wait_time)
+            self.log.warning(f"Registration attempt {attempt} failed. Retrying in 2 seconds...")
+            time.sleep(2)
         self.log.error("All registration attempts failed.")
-        return False
+        return False 
 
     def _attempt_registration(self) -> bool:
         metrics = self.collect_system_metrics()

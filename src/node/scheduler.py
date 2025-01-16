@@ -38,27 +38,6 @@ class Scheduler:
         self.task_status: Dict[str, str] = {}
         self.status_lock = Lock()
 
-    def install_dependencies(self):
-        """
-        Install required dependencies: HPL and Collectl.
-        Exits the program if installation fails.
-        """
-        try:
-            self.log_interface.info("Installing dependencies...")
-            self.hpl_config.install_hpl()
-            self.collectl_interface.install_collectl()
-            self.log_interface.info("Dependencies installed successfully.")
-        except Exception as e:
-            self.log_interface.error(f"Dependency installation failed: {str(e)}")
-            sys.exit(1)
-
-    def setup_environment(self):
-        """
-        Set up the necessary environment for running benchmarks.
-        """
-        # Placeholder for environment setup logic
-        self.log_interface.info("Environment setup complete.")
-
     def run_hpl_benchmark(
         self,
         instance_id: str,

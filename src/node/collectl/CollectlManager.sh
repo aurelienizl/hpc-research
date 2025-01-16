@@ -11,40 +11,40 @@
 #   ./collectl_manager.sh stop -id <id> - to stop Collectl using the ID
 # -----------------------------------------------------------------------------
 
-set -e  # Exit on any error
+set -e # Exit on any error
 
 # Global Variables
 COMMAND=""
 ID=""
 OUTPUT_FILE=""
-CUSTOM_COMMAND="-oT -scCdmn --export lexpr"  # Default Collectl command
-PID_DIR="/tmp/collectl_pids"  # Directory for managing process IDs
+CUSTOM_COMMAND="-oT -scCdmn --export lexpr" # Default Collectl command
+PID_DIR="/tmp/collectl_pids"                # Directory for managing process IDs
 
 # Function to parse arguments
 parse_arguments() {
     while [[ $# -gt 0 ]]; do
         case $1 in
-            -id)
-                ID="$2"
-                shift 2
-                ;;
-            -o|--output)
-                OUTPUT_FILE="$2"
-                shift 2
-                ;;
-            -cmd|--command)
-                CUSTOM_COMMAND="$2"
-                shift 2
-                ;;
-            install|start|stop)
-                COMMAND="$1"
-                shift
-                ;;
-            *)
-                echo "Error: Unknown argument: $1"
-                echo "Usage: $0 {install|start -id <id> [-o|--output <file>] [-cmd|--command <command>]|stop -id <id>}"
-                exit 1
-                ;;
+        -id)
+            ID="$2"
+            shift 2
+            ;;
+        -o | --output)
+            OUTPUT_FILE="$2"
+            shift 2
+            ;;
+        -cmd | --command)
+            CUSTOM_COMMAND="$2"
+            shift 2
+            ;;
+        install | start | stop)
+            COMMAND="$1"
+            shift
+            ;;
+        *)
+            echo "Error: Unknown argument: $1"
+            echo "Usage: $0 {install|start -id <id> [-o|--output <file>] [-cmd|--command <command>]|stop -id <id>}"
+            exit 1
+            ;;
         esac
     done
 }
@@ -53,7 +53,7 @@ install_collectl() {
     echo "Checking if Collectl is installed..."
 
     # Check if collectl is already installed
-    if command -v collectl &> /dev/null; then
+    if command -v collectl &>/dev/null; then
         echo "Collectl is already installed."
     else
         # Collectl not found, proceed with installation
@@ -64,11 +64,11 @@ install_collectl() {
 
         # Remove if /tmp/collectl-4.3.1.src.tar.gz already exists
         if [ -f /tmp/collectl-4.3.1.src.tar.gz ]; then
-            sudo rm -f /tmp/collectl-4.3.1.src.tar.gz
+            rm -f /tmp/collectl-4.3.1.src.tar.gz
         fi
 
         # Download with curl
-        sudo curl -L https://kumisystems.dl.sourceforge.net/project/collectl/collectl/collectl-4.3.1/collectl-4.3.1.src.tar.gz -o /tmp/collectl-4.3.1.src.tar.gz
+        curl -L https://kumisystems.dl.sourceforge.net/project/collectl/collectl/collectl-4.3.1/collectl-4.3.1.src.tar.gz -o /tmp/collectl-4.3.1.src.tar.gz
 
         # Check if download was successful
         if [ $? -ne 0 ]; then
@@ -78,7 +78,7 @@ install_collectl() {
 
         # Extract the tarball
         echo "Extracting Collectl 4.3.1 tarball..."
-        sudo tar -xvzf /tmp/collectl-4.3.1.src.tar.gz -C /tmp
+        tar -xvzf /tmp/collectl-4.3.1.src.tar.gz -C /tmp
 
         # Check if extraction was successful
         if [ $? -ne 0 ]; then
@@ -91,7 +91,7 @@ install_collectl() {
 
         # Run the installation
         echo "Running Collectl installation..."
-        sudo bash INSTALL
+        bash INSTALL
 
         # Check if installation was successful
         if [ $? -ne 0 ]; then
@@ -101,8 +101,8 @@ install_collectl() {
 
         # Clean up downloaded and extracted files
         echo "Cleaning up installation files..."
-        sudo rm -rf /tmp/collectl-4.3.1.src.tar.gz
-        sudo rm -rf /tmp/collectl-4.3.1.src
+        rm -rf /tmp/collectl-4.3.1.src.tar.gz
+        rm -rf /tmp/collectl-4.3.1.src
 
         echo "Collectl installation completed successfully."
     fi
@@ -132,16 +132,16 @@ start_collectl() {
     echo "Starting Collectl with ID '$ID'..."
 
     # Check if Collectl is installed
-    if ! command -v collectl &> /dev/null; then
+    if ! command -v collectl &>/dev/null; then
         echo "Error: Collectl is not installed. Run '$0 install' to install it."
         exit 1
     fi
 
     # Start Collectl in the background
-    sudo mkdir -p "$PID_DIR"
-    sudo nohup collectl $CUSTOM_COMMAND > "$OUTPUT_FILE" 2>&1 &
+    mkdir -p "$PID_DIR"
+    nohup collectl $CUSTOM_COMMAND >"$OUTPUT_FILE" 2>&1 &
     COLLECTL_PID=$!
-    echo $COLLECTL_PID > "$PID_FILE"
+    echo $COLLECTL_PID >"$PID_FILE"
 
     echo "Collectl is now running with ID '$ID' and PID $COLLECTL_PID. Results are being saved to $OUTPUT_FILE"
 }
@@ -158,14 +158,14 @@ stop_collectl() {
 
     if [[ -f "$PID_FILE" ]]; then
         COLLECTL_PID=$(cat "$PID_FILE")
-        if ps -p $COLLECTL_PID > /dev/null; then
+        if ps -p $COLLECTL_PID >/dev/null; then
             echo "Stopping Collectl with ID '$ID' and PID $COLLECTL_PID..."
-            sudo kill $COLLECTL_PID
-            sudo rm "$PID_FILE"
+            kill $COLLECTL_PID
+            rm "$PID_FILE"
             echo "Collectl with ID '$ID' has been stopped."
         else
             echo "Error: Process with ID '$ID' is not running."
-            sudo rm "$PID_FILE"
+            rm "$PID_FILE"
             exit 1
         fi
     else
@@ -178,17 +178,17 @@ stop_collectl() {
 parse_arguments "$@"
 
 case $COMMAND in
-    install)
-        install_collectl
-        ;;
-    start)
-        start_collectl
-        ;;
-    stop)
-        stop_collectl
-        ;;
-    *)
-        echo "Usage: $0 {install|start -id <id> [-o|--output <file>] [-cmd|--command <command>]|stop -id <id>}"
-        exit 1
-        ;;
+install)
+    install_collectl
+    ;;
+start)
+    start_collectl
+    ;;
+stop)
+    stop_collectl
+    ;;
+*)
+    echo "Usage: $0 {install|start -id <id> [-o|--output <file>] [-cmd|--command <command>]|stop -id <id>}"
+    exit 1
+    ;;
 esac
