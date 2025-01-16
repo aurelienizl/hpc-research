@@ -191,8 +191,9 @@ install_hpl() {
     make -j"$(nproc)"
     sudo make install
 
+    sudo cp /usr/local/hpl/bin/xhpl /usr/bin/
+
     log "HPL installation completed."
-    cd "$current_dir"
     cd ~
 }
 

@@ -115,14 +115,8 @@ def main():
 
     worker = Worker(scheduler, log)
     registration_handler = RegistrationHandler(
-        master_ip=MASTER_IP,
-        master_port=MASTER_PORT,
-        node_port=API_PORT,
-        log_interface=log,
-        additional_info={
-            "operating_system": os.uname().sysname,
-            "python_version": sys.version.split()[0],
-        },
+        MASTER_PORT,
+        MASTER_IP
     )
 
     if not registration_handler.register_node():

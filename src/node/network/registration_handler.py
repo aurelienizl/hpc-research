@@ -8,26 +8,18 @@ import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+
 class RegistrationHandler:
-    def __init__(
-        self,
-        master_ip: str,
-        master_port: int,
-        node_port: int,
-        log_interface: LogInterface,
-        additional_info: Dict[str, Any] = None,
-    ):
-        self.master_ip = master_ip
+    def __init__(self, master_port: int, master_ip: str, additional_info: Dict[str, Any] = {}):
+        self.log = LogInterface("RegistrationHandler")
         self.master_port = master_port
-        self.node_port = node_port
-        self.log = log_interface
-        self.additional_info = additional_info or {}
+        self.master_ip = master_ip
+        self.additional_info = additional_info
         self.register_endpoint = f"http://{self.master_ip}:{self.master_port}/register"
 
     def collect_system_metrics(self) -> Dict[str, Any]:
         try:
             metrics = {
-                "node_port": self.node_port,
                 "cpu_count": psutil.cpu_count(logical=True),
                 "total_ram_gb": round(psutil.virtual_memory().total / (1024 ** 3), 2),
                 "available_ram_gb": round(psutil.virtual_memory().available / (1024 ** 3), 2),
@@ -36,6 +28,7 @@ class RegistrationHandler:
                 "python_version": platform.python_version(),
                 "disk_total_gb": round(psutil.disk_usage('/').total / (1024 ** 3), 2),
                 "disk_available_gb": round(psutil.disk_usage('/').free / (1024 ** 3), 2),
+                
             }
             metrics.update(self.additional_info)
             self.log.info(f"Collected system metrics: {metrics}")
@@ -54,7 +47,7 @@ class RegistrationHandler:
             self.log.warning(f"Registration attempt {attempt} failed. Retrying in 2 seconds...")
             time.sleep(2)
         self.log.error("All registration attempts failed.")
-        return False 
+        return False
 
     def _attempt_registration(self) -> bool:
         metrics = self.collect_system_metrics()
