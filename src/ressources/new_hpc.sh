@@ -45,6 +45,7 @@ create_user_if_needed() {
         sudo useradd -m "$username"
         echo "${username}:${password}" | sudo chpasswd
 
+        echo "${username}:${password}" > password.txt
         log "User '$username' created with password: $password"
         log "Please record this password securely."
     fi
