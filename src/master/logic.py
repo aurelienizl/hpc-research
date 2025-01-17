@@ -29,7 +29,7 @@ def launch_and_monitor(menu_handler, params: Dict[str, int], benchmark_dir: Path
         ip = node["ip"]
         port = node["data"].get("metrics", {}).get("node_port", 5000)
         node_api = NodeAPI(ip, port)
-        task_id = node_api.submit_benchmark(params)
+        task_id = node_api.submit_competitive_benchmark(params)
 
         if task_id:
             node_dir = benchmark_dir / ip

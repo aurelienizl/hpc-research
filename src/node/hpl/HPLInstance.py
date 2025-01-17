@@ -23,6 +23,8 @@ class HPLInstance:
         process_count: int,
         instance_id: str,  # Unique per instance
         log_interface: LogInterface,  # Add LogInterface as a parameter
+        custom_files: Optional[Path] = None,
+        custom_params: str = "",
     ):
         """
         Initialize an HPL instance.
@@ -38,6 +40,8 @@ class HPLInstance:
         self.result_dir = result_dir
         self.process_count = process_count
         self.instance_id = instance_id
+        self.custom_files = custom_files
+        self.custom_params = custom_params
 
         self.result_file = (
             self.result_dir / f"hpl_{self.process_count}_{self.instance_id}.result"
@@ -64,6 +68,10 @@ class HPLInstance:
         self.working_dir.mkdir(parents=True, exist_ok=True)
         shutil.copy(self.hpl_binary, self.working_dir)
         shutil.copy(self.config_path, self.working_dir / "HPL.dat")
+        # For each custom file, copy it to the working directory
+        if self.custom_files:
+            for file in self.custom_files:
+                shutil.copy(file, self.working_dir)
 
     def run_command(self) -> str:
         """
@@ -72,11 +80,9 @@ class HPLInstance:
         Returns:
             str: The command to run the HPL benchmark.
         """
-        if self.process_count >= 2:
-            hpl_command = f"mpirun --allow-run-as-root --bind-to socket -np {self.process_count} {self.hpl_binary}"
-        else:
-            hpl_command = f"{self.hpl_binary}"
 
+        hpl_command = f"mpirun --bind-to socket -np {self.process_count} {self.custom_params} {self.hpl_binary}"
+        
         self.logger.info(f"HPL command: {hpl_command}")
         return hpl_command
 

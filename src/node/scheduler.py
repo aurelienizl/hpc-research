@@ -38,7 +38,73 @@ class Scheduler:
         self.task_status: Dict[str, str] = {}
         self.status_lock = Lock()
 
-    def run_hpl_benchmark(
+    def run_cooperative_hpl_benchmark(
+        self,
+        instance_id: str,
+        ps: int,
+        qs: int,
+        n_value: int,
+        nb: int,
+        # Dictionary of node IP addresses and slots
+        node_slots: Dict[str, int],
+    ):
+        """
+        Set up and execute a cooperative HPL instance.
+        
+        Args:
+            instance_id (str): Unique identifier for the task.
+            ps (int): Process grid P.
+            qs (int): Process grid Q.
+            n_value (int): Problem size N.
+            nb (int): Block size.
+            node_slots (Dict[str, int]): Dictionary of node IP addresses and slots.
+        """
+
+        with self.status_lock:
+            self.task_status[instance_id] = "Running"
+
+        self.RESULT_DIR.mkdir(parents=True, exist_ok=True)
+        task_result_dir = self.RESULT_DIR / instance_id
+        task_result_dir.mkdir(parents=True, exist_ok=True)
+
+        try:
+            config_path = self.hpl_config.generate_hpl_config(
+                n=n_value, nb=nb, p=ps, q=qs
+            )
+            hosts_path = self.hpl_config.generate_hosts_file(node_slots)
+        except ValueError as ve:
+            self.log_interface.error(f"Configuration error: {str(ve)}")
+            with self.status_lock:
+                self.task_status[instance_id] = "Configuration Error"
+                self.current_task_id = None
+            return
+        
+        hpl_instance = HPLInstance(
+            config_path=config_path,
+            result_dir=task_result_dir,
+            process_count=ps * qs,
+            instance_id=instance_id,
+            log_interface=self.log_interface,
+            custom_files=[hosts_path],
+            custom_params=f"-hostfile hosts.txt --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\"",
+        )
+
+        collectl_log_path = task_result_dir / "collectl.log"
+        self.collectl_interface.start_collectl(instance_id, collectl_log_path)
+
+        process = Process(target=self._run_instance, args=(hpl_instance, instance_id))
+        process.start()
+        process.join()
+
+        self.collectl_interface.stop_collectl(instance_id)
+
+        with self.status_lock:
+            self.task_status[instance_id] = "Completed"
+            self.current_task_id = None
+
+        self.log_interface.info(f"Task {instance_id} has been completed.")
+
+    def run_competitive_hpl_benchmark(
         self,
         instance_id: str,
         ps: int,

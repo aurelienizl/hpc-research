@@ -1,8 +1,10 @@
 import threading
 from typing import Optional
+from typing import Dict
 
 from scheduler import Scheduler
 from log.LogInterface import LogInterface
+
 
 class Worker:
     """
@@ -16,40 +18,76 @@ class Worker:
         self.scheduler = scheduler
         self.logger = log_interface
 
-    def submit_task(
-        self, task_id: str, ps: int, qs: int, n_value: int, nb: int, instances_num: int
-    ) -> bool:
+    def _submit_task(self, task_id: str, scheduler_method, *args) -> bool:
         """
-        Attempt to submit a new task to the worker. Directly starts the task if no other is running.
+        Generic method to submit any HPL benchmark task, ensuring only one task runs at a time.
         """
-        # Use scheduler's own mechanism to ensure one task at a time.
+        # Lock to ensure only one task at a time
         with self.scheduler.status_lock:
             if self.scheduler.current_task_id is not None:
                 self.logger.warning("Resource busy. Another benchmark is currently running.")
                 return False
-            # Mark this task as the current one.
+            # Mark this task as the current one
             self.scheduler.current_task_id = task_id
             self.scheduler.task_status[task_id] = "Running"
 
-        # Start the benchmark in a separate thread to avoid blocking.
-        thread = threading.Thread(
-            target=self._run_task,
-            args=(task_id, ps, qs, n_value, nb, instances_num),
-            daemon=True
-        )
+        def _run_task_wrapper():
+            try:
+                scheduler_method(task_id, *args)
+            except Exception as e:
+                self.logger.error(f"Error while executing task {task_id}: {e}")
+            finally:
+                # Clear the current task after completion
+                with self.scheduler.status_lock:
+                    self.scheduler.current_task_id = None
+
+        # Start the benchmark in a separate thread
+        thread = threading.Thread(target=_run_task_wrapper, daemon=True)
         thread.start()
+
         self.logger.info(f"Task {task_id} has been submitted.")
         return True
 
-    def _run_task(self, task_id: str, ps: int, qs: int, n_value: int, nb: int, instances_num: int):
+    def submit_competitive_hpl_task(
+        self,
+        task_id: str,
+        ps: int,
+        qs: int,
+        n_value: int,
+        nb: int,
+        instances_num: int
+    ) -> bool:
         """
-        Wrapper to run the scheduler's benchmark execution and handle completion.
+        Submits a Competitive HPL benchmark using the unified _submit_task.
         """
-        try:
-            self.scheduler.run_hpl_benchmark(task_id, ps, qs, n_value, nb, instances_num)
-        except Exception as e:
-            self.logger.error(f"Error while executing task {task_id}: {e}")
-        finally:
-            # Ensure the scheduler clears the current task regardless of outcome.
-            with self.scheduler.status_lock:
-                self.scheduler.current_task_id = None
+        return self._submit_task(
+            task_id,
+            self.scheduler.run_competitive_hpl_benchmark,
+            ps,
+            qs,
+            n_value,
+            nb,
+            instances_num
+        )
+
+    def submit_cooperative_hpl_task(
+        self,
+        task_id: str,
+        ps: int,
+        qs: int,
+        n_value: int,
+        nb: int,
+        node_slots: Dict[str, int]
+    ) -> bool:
+        """
+        Submits a Cooperative HPL benchmark using the unified _submit_task.
+        """
+        return self._submit_task(
+            task_id,
+            self.scheduler.run_cooperative_hpl_benchmark,
+            ps,
+            qs,
+            n_value,
+            nb,
+            node_slots
+        )

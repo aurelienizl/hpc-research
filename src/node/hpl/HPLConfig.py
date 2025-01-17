@@ -128,26 +128,16 @@ class HPLConfig:
 
         return config_path
 
-    def install_hpl(self, script_path: Optional[str] = None):
+    def generate_hosts_file(self, nodes: Dict[str, int]) -> Path:
         """
-        Install HPL and its dependencies using a script.
-
-        Args:
-            script_path (Optional[str]): Path to the installation script. Defaults to SCRIPT_PATH.
-
-        Raises:
-            FileNotFoundError: If the installation script is not found.
-            subprocess.CalledProcessError: If the installation script fails.
+        Generate the hosts file for the HPL benchmark.
+        The filename is fixed to 'hosts.txt'.
         """
-        script = Path(script_path) if script_path else self.SCRIPT_PATH
-        self.logger.info(f"Starting HPL installation using script: {script}")
+        hosts_file = self.output_dir / "hosts.txt"
 
-        if not script.exists():
-            raise FileNotFoundError(f"Installation script not found: {script}")
+        with open(hosts_file, "w") as f:
+            for node, slots in nodes.items():
+                f.write(f"{node} slots={slots}\n")
 
-        try:
-            subprocess.run(["bash", str(script)], check=True)
-            self.logger.info("HPL installation completed successfully.")
-        except subprocess.CalledProcessError as e:
-            self.logger.error(f"Error during HPL installation: {e}")
-            raise
+        self.logger.info(f"Hosts file generated at {hosts_file}")
+        return hosts_file

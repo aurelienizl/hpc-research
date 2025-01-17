@@ -17,7 +17,7 @@ API_HOST = os.getenv("API_HOST", "0.0.0.0")
 API_PORT = int(os.getenv("API_PORT", 5000))
 
 # Master Configuration Constants
-MASTER_IP = os.getenv("MASTER_IP", "192.168.1.198")
+MASTER_IP = os.getenv("MASTER_IP", "127.0.0.1")
 MASTER_PORT = int(os.getenv("MASTER_PORT", 8000))
 
 
@@ -37,21 +37,47 @@ def safe_endpoint(log_interface):
 def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
     app = Flask(__name__)
 
-    @app.route("/submit_custom_task", methods=["POST"])
+    @app.route("/submit_cooperative_benchmark", methods=["POST"])
     @safe_endpoint(log_interface)
-    def submit_custom_task():
+    def submit_cooperative_benchmark():
+        '''
+        TODO: Check if the request is a valid JSON payload.
+        '''
         data: Dict[str, Any] = request.get_json()
         if not data:
             log_interface.warning("Received invalid JSON payload.")
             return jsonify({"error": "Invalid JSON payload."}), 400
 
-        # Extract and validate parameters
-        required_params = ["ps", "qs", "n_value", "nb", "instances_num"]
-        for param in required_params:
-            if not isinstance(data.get(param), int) or data.get(param) <= 0:
-                log_interface.warning(
-                    f"Validation failed for parameter: {param}.")
-                return jsonify({"error": f"'{param}' must be a positive integer."}), 400
+        # Required parameters
+        # required_params = ["ps", "qs", "n_value", "nb", "node_slots"]
+
+        # Extract and store parameter values
+        ps = data["ps"]
+        qs = data["qs"]
+        n_value = data["n_value"]
+        nb = data["nb"]
+        node_slots = data["node_slots"]
+
+        # Generate a unique task ID
+        task_id = uuid.uuid4().hex
+
+        # Submit the cooperative HPL task via the Worker
+        success = worker.submit_cooperative_hpl_task(
+            task_id, ps, qs, n_value, nb, node_slots
+        )
+
+        if success:
+            return jsonify({"task_id": task_id}), 200
+        else:
+            return jsonify({"error": "Resource busy. Another benchmark is currently running."}), 409
+
+    @app.route("/submit_competitive_benchmark", methods=["POST"])
+    @safe_endpoint(log_interface)
+    def submit_competitive_benchmark():
+        data: Dict[str, Any] = request.get_json()
+        if not data:
+            log_interface.warning("Received invalid JSON payload.")
+            return jsonify({"error": "Invalid JSON payload."}), 400
 
         ps = data["ps"]
         qs = data["qs"]
@@ -60,7 +86,7 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
         instances_num = data["instances_num"]
 
         task_id = uuid.uuid4().hex
-        success = worker.submit_task(
+        success = worker.submit_competitive_hpl_task(
             task_id, ps, qs, n_value, nb, instances_num)
 
         if success:
