@@ -10,7 +10,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Clean up
-sudo bash clean.sh
+bash clean.sh
 
 # Run server
 if [ "$1" == "--master" ]; then
