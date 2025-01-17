@@ -10,13 +10,13 @@ class NodeAPI:
     def __init__(self, ip: str, port: int):
         self.base_url = f"http://{ip}:{port}"
 
-    def submit_competitive_benchmark(self, params: Dict[str, int]) -> Optional[str]:
+    def submit_benchmark(self, params: Dict[str, int]) -> Optional[str]:
         """
-        Submit a benchmark request to the node. Returns a task_id if successful.
+        Submit a standard benchmark request to the node. Returns a task_id if successful.
         """
         try:
             response = requests.post(
-                f"{self.base_url}/submit_competitive_benchmark",
+                f"{self.base_url}/submit_custom_task",
                 json=params,
                 timeout=10
             )
@@ -65,3 +65,58 @@ class NodeAPI:
         except Exception as e:
             print(f"Error retrieving results for task {task_id}: {e}")
             return False
+
+    def submit_cooperative_benchmark(
+        self,
+        ps: int,
+        qs: int,
+        n_value: int,
+        nb: int,
+        node_slots: Dict[str, int]
+    ) -> Optional[str]:
+        """
+        Submit a cooperative benchmark request to the node. Returns a task_id if successful.
+        Expected payload:
+            ps: int
+            qs: int
+            n_value: int
+            nb: int
+            node_slots: Dict[str, int]
+        """
+        try:
+            payload = {
+                "ps": ps,
+                "qs": qs,
+                "n_value": n_value,
+                "nb": nb,
+                "node_slots": node_slots
+            }
+            response = requests.post(
+                f"{self.base_url}/submit_cooperative_benchmark",
+                json=payload,
+                timeout=10
+            )
+
+            # If the server returns a 4xx or 5xx status code, this will raise an HTTPError
+            response.raise_for_status()
+
+            # Parse JSON response
+            data = response.json()
+
+            # Return task_id if available
+            return data.get("task_id")
+
+        except requests.HTTPError as http_err:
+            # In case of a 409 (Resource busy) or other HTTP error
+            try:
+                # Attempt to parse server's JSON error message
+                error_data = response.json()
+                error_msg = error_data.get("error", "Unknown error.")
+                print(f"HTTP error from {self.base_url}: {error_msg} (Status code {response.status_code})")
+            except Exception:
+                # Fallback if JSON parsing fails
+                print(f"HTTP error from {self.base_url}: {http_err}")
+            return None
+        except Exception as e:
+            print(f"Error submitting cooperative benchmark to {self.base_url}: {e}")
+            return None
