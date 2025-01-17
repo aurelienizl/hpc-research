@@ -81,7 +81,7 @@ class HPLInstance:
             str: The command to run the HPL benchmark.
         """
 
-        hpl_command = f"mpirun --bind-to socket -np {self.process_count} {self.custom_params} {self.hpl_binary}"
+        hpl_command = f"mpirun --bind-to socket --allow-run-as-root -np {self.process_count} {self.custom_params} {self.hpl_binary}"
         
         self.logger.info(f"HPL command: {hpl_command}")
         return hpl_command
