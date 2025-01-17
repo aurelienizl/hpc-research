@@ -10,13 +10,13 @@ class NodeAPI:
     def __init__(self, ip: str, port: int):
         self.base_url = f"http://{ip}:{port}"
 
-    def submit_benchmark(self, params: Dict[str, int]) -> Optional[str]:
+    def submit_competitive_benchmark(self, params: Dict[str, int]) -> Optional[str]:
         """
         Submit a standard benchmark request to the node. Returns a task_id if successful.
         """
         try:
             response = requests.post(
-                f"{self.base_url}/submit_custom_task",
+                f"{self.base_url}/submit_competitive_benchmark",
                 json=params,
                 timeout=10
             )
