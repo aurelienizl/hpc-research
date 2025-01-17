@@ -28,8 +28,6 @@ def safe_endpoint(log_interface):
             try:
                 return func(*args, **kwargs)
             except Exception as e:
-                log_interface.error(f"Unhandled exception in endpoint {
-                                    func.__name__}: {str(e)}")
                 return jsonify({"error": "Internal Server Error"}), 500
         wrapper.__name__ = func.__name__
         return wrapper
