@@ -2,6 +2,7 @@ import requests
 import psutil
 import platform
 import time
+import os
 from typing import Dict, Any
 from log.LogInterface import LogInterface
 import urllib3
@@ -10,7 +11,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class RegistrationHandler:
-    def __init__(self, master_port: int, master_ip: str, additional_info: Dict[str, Any] = {}):
+    def __init__(self, master_ip: str , master_port: int, additional_info: Dict[str, Any] = {}):
         self.log = LogInterface("RegistrationHandler")
         self.master_port = master_port
         self.master_ip = master_ip
@@ -28,7 +29,7 @@ class RegistrationHandler:
                 "python_version": platform.python_version(),
                 "disk_total_gb": round(psutil.disk_usage('/').total / (1024 ** 3), 2),
                 "disk_available_gb": round(psutil.disk_usage('/').free / (1024 ** 3), 2),
-                
+
             }
             metrics.update(self.additional_info)
             self.log.info(f"Collected system metrics: {metrics}")
@@ -76,3 +77,4 @@ class RegistrationHandler:
         except requests.exceptions.RequestException as e:
             self.log.error(f"Exception during node registration: {e}")
             return False
+

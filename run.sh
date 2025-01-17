@@ -13,13 +13,12 @@ pip install -r requirements.txt
 sudo bash clean.sh
 
 # Run server
-if [ "$1" == "--node" ]; then
+if [ "$1" == "--master" ]; then
+   cd src/master
+   python3 main.py
+else
    cd src/node
    python3 server.py
-else
-   cd src/master
-   python3 master.py
 fi
-cd ..
 
 deactivate

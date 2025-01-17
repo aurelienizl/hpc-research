@@ -1,16 +1,11 @@
-# LogInterface.py
-
-import subprocess
-import os
+import datetime
 from typing import Optional
-
 
 class LogInterface:
     """
     A Python class to interact with the Log.sh shell script for logging.
+    Uses a simple logging format that can be parsed by many external tools.
     """
-
-    SCRIPT_PATH = os.path.join(os.path.dirname(__file__), "Log.sh")
 
     def __init__(self, verbose: bool = False, log_file: Optional[str] = None):
         """
@@ -18,46 +13,32 @@ class LogInterface:
 
         Args:
             verbose (bool): If True, logs are displayed in real-time.
-            log_file (str): Optional log file name. Defaults to log.txt.
+            log_file (str): Optional log file name. Defaults to 'log.txt'.
         """
         self.verbose = verbose
         self.log_file = log_file or "log.txt"
 
     def log(self, level: str, message: str):
         """
-        Logs a message using the shell script.
+        Logs a message.
 
         Args:
-            level (str): Log level ('info', 'warning', 'error').
+            level (str): Log level ('info', 'warning', 'error', 'critical').
             message (str): Log message.
         """
-        valid_levels = {"info", "warning", "error"}
-        if level not in valid_levels:
-            raise ValueError(
-                f"Invalid log level: {level}. Valid levels are: {valid_levels}"
-            )
+        # Create a timestamp in ISO 8601 format (e.g. 2025-01-16T10:45:00)
+        timestamp = datetime.datetime.now().isoformat()
 
-        try:
-            # If verbose is enabled, do not capture stdout and stderr
-            if self.verbose:
-                subprocess.run(
-                    [LogInterface.SCRIPT_PATH, level, message, self.log_file],
-                    check=True,
-                )
-            else:
-                # Capture stdout and stderr when verbose is disabled
-                subprocess.run(
-                    [LogInterface.SCRIPT_PATH, level, message, self.log_file],
-                    check=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                )
+        # Use a common log format: timestamp, level, and message
+        log_line = f"{timestamp} [{level.upper()}] - {message}\n"
 
-        except subprocess.CalledProcessError as e:
-            print(f"Failed to log message: {e.stderr.strip()}")
-        except FileNotFoundError:
-            print(f"Shell script not found at {LogInterface.SCRIPT_PATH}")
+        # Write the log line to the specified file
+        with open(self.log_file, "a") as lf:
+            lf.write(log_line)
+
+        # Print to console if verbose is True
+        if self.verbose:
+            print(log_line, end="")
 
     def info(self, message: str):
         """Logs an info-level message."""
@@ -70,3 +51,7 @@ class LogInterface:
     def error(self, message: str):
         """Logs an error-level message."""
         self.log("error", message)
+
+    def critical(self, message: str):
+        """Logs a critical-level message."""
+        self.log("critical", message)

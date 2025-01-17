@@ -1,17 +1,24 @@
-import time
-from pathlib import Path
-from typing import Any, Dict, Optional
-
 import requests
+from pathlib import Path
+from typing import Dict, Optional
 
 class NodeAPI:
+    """
+    A helper class for communicating with a single node's HTTP API.
+    """
+
     def __init__(self, ip: str, port: int):
         self.base_url = f"http://{ip}:{port}"
 
     def submit_benchmark(self, params: Dict[str, int]) -> Optional[str]:
+        """
+        Submit a benchmark request to the node. Returns a task_id if successful.
+        """
         try:
             response = requests.post(
-                f"{self.base_url}/submit_custom_task", json=params, timeout=10
+                f"{self.base_url}/submit_custom_task",
+                json=params,
+                timeout=10
             )
             response.raise_for_status()
             return response.json().get("task_id")
@@ -20,9 +27,14 @@ class NodeAPI:
             return None
 
     def check_status(self, task_id: str) -> Optional[str]:
+        """
+        Check the status of a benchmark task.
+        Returns the status string ("running", "completed", etc.) if successful.
+        """
         try:
             response = requests.get(
-                f"{self.base_url}/task_status/{task_id}", timeout=10
+                f"{self.base_url}/task_status/{task_id}",
+                timeout=10
             )
             response.raise_for_status()
             return response.json().get("status")
@@ -31,15 +43,24 @@ class NodeAPI:
             return None
 
     def get_results(self, task_id: str, save_dir: Path) -> bool:
+        """
+        Fetch benchmark results for a completed task and save them to disk.
+        Returns True if the results were successfully retrieved and saved.
+        """
         try:
             response = requests.get(
-                f"{self.base_url}/get_results/{task_id}", timeout=30
+                f"{self.base_url}/get_results/{task_id}",
+                timeout=30
             )
             response.raise_for_status()
             results = response.json().get("results", [])
+
             for result in results:
-                file_path = save_dir / result["filename"]
-                file_path.write_text(result["content"])
+                filename = result["filename"]
+                content = result["content"]
+                file_path = save_dir / filename
+                file_path.write_text(content)
+
             return True
         except Exception as e:
             print(f"Error retrieving results for task {task_id}: {e}")

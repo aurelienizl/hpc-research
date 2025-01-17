@@ -3,11 +3,14 @@ import sys
 import uuid
 from flask import Flask, request, jsonify
 from typing import Any, Dict, List
+import requests
 
 from worker import Worker
 from scheduler import Scheduler
 from log.LogInterface import LogInterface
-from network.registration_handler import RegistrationHandler
+from master_handler.registration_handler import RegistrationHandler
+from master_handler.ssh_handler import SSHHandler
+
 
 # Server Configuration Constants
 API_HOST = os.getenv("API_HOST", "0.0.0.0")
@@ -17,6 +20,7 @@ API_PORT = int(os.getenv("API_PORT", 5000))
 MASTER_IP = os.getenv("MASTER_IP", "127.0.0.1")
 MASTER_PORT = int(os.getenv("MASTER_PORT", 8000))
 
+
 def safe_endpoint(log_interface):
     """Decorator for generic error handling in Flask endpoints."""
     def decorator(func):
@@ -24,11 +28,13 @@ def safe_endpoint(log_interface):
             try:
                 return func(*args, **kwargs)
             except Exception as e:
-                log_interface.error(f"Unhandled exception in endpoint {func.__name__}: {str(e)}")
+                log_interface.error(f"Unhandled exception in endpoint {
+                                    func.__name__}: {str(e)}")
                 return jsonify({"error": "Internal Server Error"}), 500
         wrapper.__name__ = func.__name__
         return wrapper
     return decorator
+
 
 def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
     app = Flask(__name__)
@@ -45,7 +51,8 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
         required_params = ["ps", "qs", "n_value", "nb", "instances_num"]
         for param in required_params:
             if not isinstance(data.get(param), int) or data.get(param) <= 0:
-                log_interface.warning(f"Validation failed for parameter: {param}.")
+                log_interface.warning(
+                    f"Validation failed for parameter: {param}.")
                 return jsonify({"error": f"'{param}' must be a positive integer."}), 400
 
         ps = data["ps"]
@@ -55,7 +62,8 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
         instances_num = data["instances_num"]
 
         task_id = uuid.uuid4().hex
-        success = worker.submit_task(task_id, ps, qs, n_value, nb, instances_num)
+        success = worker.submit_task(
+            task_id, ps, qs, n_value, nb, instances_num)
 
         if success:
             return jsonify({"task_id": task_id}), 200
@@ -66,7 +74,8 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
     def task_status_endpoint(task_id: str):
         status = worker.scheduler.get_task_status(task_id)
         if status is None:
-            log_interface.info(f"Status check failed: Task ID {task_id} not found.")
+            log_interface.info(f"Status check failed: Task ID {
+                               task_id} not found.")
             return jsonify({"error": "Task ID not found."}), 404
         return jsonify({"task_id": task_id, "status": status}), 200
 
@@ -75,7 +84,8 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
     def get_results(task_id: str):
         result_dir = worker.scheduler.RESULT_DIR / task_id
         if not result_dir.exists() or not result_dir.is_dir():
-            log_interface.info(f"Result retrieval failed: Task ID {task_id} not found.")
+            log_interface.info(f"Result retrieval failed: Task ID {
+                               task_id} not found.")
             return jsonify({"error": "Results for the given Task ID not found."}), 404
 
         result_files = list(result_dir.glob("*"))
@@ -87,9 +97,11 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
         for file_path in result_files:
             try:
                 content = file_path.read_text()
-                results.append({"filename": file_path.name, "content": content})
+                results.append(
+                    {"filename": file_path.name, "content": content})
             except Exception as e:
-                log_interface.error(f"Error reading file {file_path}: {str(e)}")
+                log_interface.error(f"Error reading file {
+                                    file_path}: {str(e)}")
                 return jsonify({"error": f"Failed to read file {file_path.name}."}), 500
 
         return jsonify({"task_id": task_id, "results": results}), 200
@@ -100,6 +112,7 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
         return jsonify({"message": "pong"}), 200
 
     return app
+
 
 def main():
     print("Environment Variables:")
@@ -114,13 +127,17 @@ def main():
     scheduler = Scheduler(log)
 
     worker = Worker(scheduler, log)
-    registration_handler = RegistrationHandler(
-        MASTER_PORT,
-        MASTER_IP
-    )
+    registration_handler = RegistrationHandler(MASTER_IP,MASTER_PORT)
 
     if not registration_handler.register_node():
         log.error("Node registration failed. Shutting down the server.")
+        sys.exit(1)
+
+    ssh_handler = SSHHandler(MASTER_IP, MASTER_PORT)
+
+    if not ssh_handler.register_ssh_keys():
+        log.error(
+            "Failed to fetch SSH key from the master node. Shutting down the server.")
         sys.exit(1)
 
     app = create_app(worker, log)
@@ -135,6 +152,7 @@ def main():
         log.error(f"Server encountered an error: {e}")
         worker.scheduler.shutdown()
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
