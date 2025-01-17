@@ -108,11 +108,11 @@ fi
 
 # 10. Final security configurations
 echo "Setting up final security configurations..."
-cat > /etc/ssh/sshd_config.d/hardening.conf << EOF
-PermitRootLogin no
-PasswordAuthentication no
-MaxAuthTries 3
-EOF
+#cat > /etc/ssh/sshd_config.d/hardening.conf << EOF
+#PermitRootLogin no
+#PasswordAuthentication no
+#MaxAuthTries 3
+#EOF
 
 # 11. Setup UFW
 echo "Configuring firewall..."
@@ -120,6 +120,7 @@ ufw default deny incoming
 ufw default allow outgoing
 ufw allow ssh
 ufw allow 5000
+ufw allow 8000
 echo "y" | ufw enable
 
 echo "Template preparation complete!"
