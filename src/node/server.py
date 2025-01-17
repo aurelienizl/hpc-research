@@ -58,6 +58,8 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
         nb = data["nb"]
         node_slots = data["node_slots"]
 
+        log_interface.info(f"Received cooperative benchmark request: {data}")
+
         # Generate a unique task ID
         task_id = uuid.uuid4().hex
 
@@ -84,6 +86,8 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
         n_value = data["n_value"]
         nb = data["nb"]
         instances_num = data["instances_num"]
+
+        log_interface.info(f"Received competitive benchmark request: {data}")
 
         task_id = uuid.uuid4().hex
         success = worker.submit_competitive_hpl_task(
