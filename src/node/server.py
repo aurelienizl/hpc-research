@@ -153,7 +153,7 @@ def main():
     worker = Worker(scheduler, log)
     registration_handler = RegistrationHandler(MASTER_IP, MASTER_PORT)
 
-    if not registration_handler.register_node():
+    if not registration_handler.register_node(max_retries=100):
         log.error("Node registration failed. Shutting down the server.")
         sys.exit(1)
 
