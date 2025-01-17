@@ -136,14 +136,28 @@ class SSHHandler:
     # Import private key into SSH agent (optional)
     # -------------------------------------------------------------------------
     def _import_private_key(self) -> None:
-        """Load the private key into the local SSH agent if possible."""
+        """
+        Ensure an SSH agent is running, then load the private key into it.
+        This function will attempt to:
+        1) Find an existing agent via SSH_AUTH_SOCK.
+        2) If none is found, start a new agent and set SSH_AUTH_SOCK and SSH_AGENT_PID.
+        3) Run `ssh-add` to load the private key.
+        """
         ssh_dir = os.path.expanduser("~/.ssh")
         priv_key_path = os.path.join(ssh_dir, "id_rsa")
 
         if not os.path.exists(priv_key_path):
-            self.log.warning("Private key file not found; cannot import into SSH agent.")
+            self.log.warning("No private key found at ~/.ssh/id_rsa; cannot import into SSH agent.")
             return
 
+        # 1) Check if an SSH agent is already running.
+        if "SSH_AUTH_SOCK" not in os.environ:
+            self.log.warning("No SSH agent detected. Attempting to start one...")
+            if not self._start_ssh_agent():
+                self.log.error("Failed to start SSH agent. Cannot import private key.")
+                return
+
+        # 2) Now that an agent should be running, attempt to add the key.
         try:
             subprocess.run(["ssh-add", priv_key_path], check=True)
             self.log.info("Successfully imported the private key into the SSH agent.")
@@ -151,6 +165,45 @@ class SSHHandler:
             self.log.error(f"Failed to add the private key to SSH agent: {e}")
         except FileNotFoundError:
             self.log.error("ssh-add command not found. Make sure you have OpenSSH client installed.")
+
+
+    def _start_ssh_agent(self) -> bool:
+        """
+        Attempt to start a new ssh-agent and set the environment variables
+        (SSH_AUTH_SOCK, SSH_AGENT_PID) for the current process.
+
+        Returns:
+            bool: True if the agent was started successfully, False otherwise.
+        """
+        try:
+            # Start an ssh-agent in "single run" mode; it will print environment variables to stdout.
+            proc = subprocess.Popen(["ssh-agent", "-s"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            out, err = proc.communicate()
+
+            if proc.returncode != 0:
+                self.log.error(f"ssh-agent failed to start: {err.decode().strip()}")
+                return False
+
+            # Parse the output lines to extract SSH_AUTH_SOCK and SSH_AGENT_PID.
+            for line in out.decode().split("\n"):
+                if line.startswith("SSH_AUTH_SOCK") or line.startswith("SSH_AGENT_PID"):
+                    # Example line: SSH_AUTH_SOCK=/tmp/ssh-oH45SWPEmDCa/agent.12345; export SSH_AUTH_SOCK;
+                    key_val = line.split(";")[0]  # e.g., SSH_AUTH_SOCK=/tmp/ssh-agent...
+                    if "=" in key_val:
+                        env_key, env_val = key_val.split("=", 1)
+                        os.environ[env_key] = env_val
+                        self.log.info(f"Set {env_key}={env_val}")
+
+            return True
+
+        except FileNotFoundError:
+            # ssh-agent is not installed.
+            self.log.error("ssh-agent command not found. Make sure you have the OpenSSH client installed.")
+            return False
+        except Exception as e:
+            self.log.error(f"Unexpected error while starting ssh-agent: {e}")
+            return False
+
 
     # -------------------------------------------------------------------------
     # Helper: ensure ~/.ssh directory exists
