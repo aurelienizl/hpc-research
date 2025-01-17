@@ -109,18 +109,18 @@ class MenuHandler:
         # 2) Prompt for the node slot (only one input for all)
         while True:
             try:
-                node_slot_value = int(input("Enter the node slot to reserve on the first node: "))
+                node_slot_value = int(input("Enter the number of slots to reserve for each node: "))
                 break
             except ValueError:
-                print("Invalid input. Please enter a number for the node slot.")
+                print("Invalid input.")
 
         # 3) Select the first node
         first_node = self.nodes[0]
         ip = first_node["ip"]
         port = first_node["data"].get("metrics", {}).get("node_port", 5000)
 
-        # 4) Prepare node_slots with just the first node
-        node_slots = {ip: node_slot_value}
+        # 4) Prepare node_slots with all nodes
+        node_slots = {node["ip"]: node_slot_value for node in self.nodes}
 
         # 5) Submit the cooperative benchmark
         node_api = NodeAPI(ip, port)
