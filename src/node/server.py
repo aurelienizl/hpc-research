@@ -72,8 +72,7 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
     def task_status_endpoint(task_id: str):
         status = worker.scheduler.get_task_status(task_id)
         if status is None:
-            log_interface.info(f"Status check failed: Task ID {
-                               task_id} not found.")
+            log_interface.info(f"Status check failed: Task ID {task_id} not found.")
             return jsonify({"error": "Task ID not found."}), 404
         return jsonify({"task_id": task_id, "status": status}), 200
 
@@ -95,11 +94,9 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
         for file_path in result_files:
             try:
                 content = file_path.read_text()
-                results.append(
-                    {"filename": file_path.name, "content": content})
+                results.append({"filename": file_path.name, "content": content})
             except Exception as e:
-                log_interface.error(f"Error reading file {
-                                    file_path}: {str(e)}")
+                log_interface.error(f"Error reading file {file_path}: {str(e)}")
                 return jsonify({"error": f"Failed to read file {file_path.name}."}), 500
 
         return jsonify({"task_id": task_id, "results": results}), 200
@@ -125,7 +122,7 @@ def main():
     scheduler = Scheduler(log)
 
     worker = Worker(scheduler, log)
-    registration_handler = RegistrationHandler(MASTER_IP,MASTER_PORT)
+    registration_handler = RegistrationHandler(MASTER_IP, MASTER_PORT)
 
     if not registration_handler.register_node():
         log.error("Node registration failed. Shutting down the server.")
