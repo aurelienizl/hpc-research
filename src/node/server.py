@@ -81,8 +81,7 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
     def get_results(task_id: str):
         result_dir = worker.scheduler.RESULT_DIR / task_id
         if not result_dir.exists() or not result_dir.is_dir():
-            log_interface.info(f"Result retrieval failed: Task ID {
-                               task_id} not found.")
+            log_interface.info(f"Result retrieval failed: Task ID {task_id} not found.")
             return jsonify({"error": "Results for the given Task ID not found."}), 404
 
         result_files = list(result_dir.glob("*"))
