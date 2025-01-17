@@ -17,7 +17,7 @@ def setup_benchmark_environment() -> Path:
     benchmark_dir.mkdir(parents=True, exist_ok=True)
     return benchmark_dir
 
-def launch_and_monitor_competitive(menu_handler, params: Dict[str, int], benchmark_dir: Path) -> None:
+def launch_and_monitor(menu_handler, params: Dict[str, int], benchmark_dir: Path) -> None:
     """
     For each registered node, submit a benchmark task and monitor progress.
     Once completed, fetch results and store them in the appropriate directory.
