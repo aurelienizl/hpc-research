@@ -114,14 +114,7 @@ echo "Setting up final security configurations..."
 #MaxAuthTries 3
 #EOF
 
-# 11. Setup UFW
-echo "Configuring firewall..."
-ufw default deny incoming
-ufw default allow outgoing
-ufw allow ssh
-ufw allow 5000
-ufw allow 8000
-echo "y" | ufw enable
+sudo ufw disable
 
 echo "Template preparation complete!"
 echo "The system will shutdown in 10 seconds..."
