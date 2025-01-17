@@ -152,6 +152,8 @@ class Scheduler:
                 process_count=ps * qs,
                 instance_id=unique_instance_id,  # Unique instance_id
                 log_interface=self.log_interface,  # Pass LogInterface
+                custom_files=None,
+                custom_params=f"--bind-to socket",
             )
             hpl_instances.append(hpl_instance)
 
