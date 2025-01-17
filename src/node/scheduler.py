@@ -72,6 +72,10 @@ class Scheduler:
                 n=n_value, nb=nb, p=ps, q=qs
             )
             hosts_path = self.hpl_config.generate_hosts_file(node_slots)
+            print(f"Hosts file: {hosts_path}")
+            print(f"Node slots: {node_slots}")
+            # Print the contents of the hosts file
+            print(hosts_path.read_text())
         except ValueError as ve:
             self.log_interface.error(f"Configuration error: {str(ve)}")
             with self.status_lock:
