@@ -19,6 +19,9 @@ log() {
 # Utility Functions
 # -----------------------------------------------------------------------------
 
+command_exists() {
+    command -v "$1" &> /dev/null
+}
 
 package_installed() {
     dpkg -s "$1" >/dev/null 2>&1
