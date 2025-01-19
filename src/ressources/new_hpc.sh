@@ -255,7 +255,7 @@ create_startup_script() {
     fi
 
     echo "HPC initialization completed successfully"
-    EOF
+EOF
 
     # Make the HPC script executable
     chmod +x /usr/local/sbin/hpc-init.sh
