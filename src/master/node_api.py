@@ -88,8 +88,7 @@ class NodeAPI:
             return response.json().get("task_id")
 
         except Exception as e:
-            print(f"Error submitting cooperative benchmark to {
-                  self.base_url}: {e}")
+            print(f"Error submitting cooperative benchmark to {self.base_url}: {e}")
             return None
 
     def submit_competitive_benchmark(self, 
