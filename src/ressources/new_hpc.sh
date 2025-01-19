@@ -19,9 +19,6 @@ log() {
 # Utility Functions
 # -----------------------------------------------------------------------------
 
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
-}
 
 package_installed() {
     dpkg -s "$1" >/dev/null 2>&1
@@ -48,6 +45,7 @@ create_user_if_needed() {
         echo "${username}:${password}" > password.txt
         log "User '$username' created with password: $password"
         log "Please record this password securely."
+        sudo chmod 600 password.txt
     fi
 }
 
@@ -184,7 +182,7 @@ install_hpl() {
     cd "$hpl_dir"
 
     ./configure \
-        LDFLAGS="-L../lapack-3.11.0" \
+        LDFLAGS="-L../lapack-3.9.0" \
         LIBS="-llapack -lblas" \
         CC=mpicc \
         --prefix=/usr/local/hpl
@@ -202,6 +200,90 @@ cleanup() {
     log "Cleaning up temporary files..."
     rm -rf /tmp/lapack-3.11.0* /tmp/hpl-2.3* 
     cd ~
+}
+
+#   -----------------------------------------------------------------------------
+#   Setup HPC-RESEARCH
+#   -----------------------------------------------------------------------------
+
+create_startup_script() {
+    cat > /usr/local/sbin/hpc-init.sh << 'EOF'
+
+    #!/bin/bash
+
+    # Wait for network to be available
+    sleep 10
+
+    # Clone and setup repository
+    echo "Changing to /tmp directory..."
+    cd /tmp || {
+        echo "ERROR: Failed to change to /tmp directory"
+        exit 1
+    }
+
+    echo "Removing old hpc-research directory if exists..."
+    rm -rf hpc-research
+
+    echo "Cloning repository..."
+    git clone https://github.com/aurelienizl/hpc-research.git
+    if [ $? -ne 0 ]; then
+        echo "ERROR: Git clone failed"
+        exit 1
+    fi
+
+    echo "Changing to hpc-research directory..."
+    cd hpc-research || {
+        echo "ERROR: Failed to change to hpc-research directory"
+        exit 1
+    }
+
+    echo "Checking out dev branch..."
+    git checkout dev
+    if [ $? -ne 0 ]; then
+        echo "ERROR: Git checkout failed"
+        exit 1
+    fi
+
+    echo "Running run.sh..."
+    bash run.sh
+    if [ $? -ne 0 ]; then
+        echo "ERROR: run.sh failed"
+        exit 1
+    fi
+
+    echo "HPC initialization completed successfully"
+    EOF
+
+    # Make the HPC script executable
+    chmod +x /usr/local/sbin/hpc-init.sh
+
+    # Create systemd service
+    cat > /etc/systemd/system/hpc-init.service << EOF
+    [Unit]
+    Description=HPC Research Initialization
+    After=network-online.target
+    Wants=network-online.target
+    After=systemd-resolved.service
+    After=NetworkManager.service
+
+    [Service]
+    Type=simple
+    User=hpc-research
+    ExecStart=/bin/bash -c '/usr/local/sbin/hpc-init.sh &'
+    RemainAfterExit=yes
+    TimeoutStartSec=900
+    Restart=on-failure
+    RestartSec=30
+    StartLimitBurst=3
+
+    [Install]
+    WantedBy=multi-user.target
+    EOF
+
+    # Reload systemd
+    systemctl daemon-reload
+    # Enable the service
+    systemctl enable hpc-init.service
 }
 
 # -----------------------------------------------------------------------------
@@ -235,3 +317,7 @@ main() {
 }
 
 main
+
+
+
+
