@@ -278,7 +278,7 @@ create_startup_script() {
 
     [Install]
     WantedBy=multi-user.target
-    EOF
+EOF
 
     # Reload systemd
     systemctl daemon-reload
@@ -317,7 +317,3 @@ main() {
 }
 
 main
-
-
-
-
