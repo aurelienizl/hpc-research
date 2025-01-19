@@ -317,6 +317,9 @@ main() {
         install_hpl
         cleanup
     fi
+
+    create_startup_script
+    log "HPC-RESEARCH setup completed successfully."
 }
 
 main
