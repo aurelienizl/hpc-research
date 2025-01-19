@@ -200,7 +200,7 @@ class Scheduler:
                 f"Execution error for instance {instance_id}: {str(e)}"
             )
             with self.status_lock:
-                self.task_status[instance_id] = "Execution Error"
+                self.task_status[instance_id] = "Error"
                 self.current_task_id = None
 
     def get_task_status(self, task_id: str) -> Optional[str]:

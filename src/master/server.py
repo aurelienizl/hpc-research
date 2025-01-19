@@ -2,6 +2,8 @@ import os
 from flask import Flask, request, jsonify
 from menu_handler import MenuHandler
 
+
+
 def create_app(menu_handler: MenuHandler) -> Flask:
     app = Flask(__name__)
 
@@ -21,7 +23,6 @@ def create_app(menu_handler: MenuHandler) -> Flask:
         home_dir = os.path.expanduser("~")
         public_key_path = os.path.join(home_dir, ".ssh", "id_rsa.pub")
 
-        # Read the public key from the file
         if not os.path.exists(public_key_path):
             return jsonify({"error": "No public key found on the server"}), 404
 
@@ -38,11 +39,9 @@ def create_app(menu_handler: MenuHandler) -> Flask:
         home_dir = os.path.expanduser("~")
         private_key_path = os.path.join(home_dir, ".ssh", "id_rsa")
 
-        # Check if the private key file exists
         if not os.path.exists(private_key_path):
             return jsonify({"error": "No private key found on the server"}), 404
 
-        # Read and return the private key
         with open(private_key_path, "r") as f:
             private_data = f.read().strip()
 

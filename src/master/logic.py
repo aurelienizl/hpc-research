@@ -1,38 +1,62 @@
-import time
 import os
 import subprocess
+import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List, Any
 
 from node_api import NodeAPI
 
-def setup_benchmark_environment() -> Path:
-    """
-    Create a new directory named with the current timestamp to store benchmark results.
-    """
-    benchmark_dir = Path(
-        f"benchmarks/benchmark_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    )
-    benchmark_dir.mkdir(parents=True, exist_ok=True)
-    return benchmark_dir
 
-def launch_and_monitor(menu_handler, params: Dict[str, int], benchmark_dir: Path) -> None:
-    """
-    For each registered node, submit a benchmark task and monitor progress.
-    Once completed, fetch results and store them in the appropriate directory.
-    """
+
+def wait_benchmark_completion(active_tasks: Dict[str, Dict[str, any]]) -> None:
+    while active_tasks:
+        for ip, task in list(active_tasks.items()):
+            task_id = task["task_id"]
+            api = task["api"]
+            task_dir = task["dir"]
+
+            status = api.get_task_status(task_id)
+            # Could be Error, Running, Completed, or None
+            print(f"Task {task_id} on {ip} - Status: {status}")
+            if status == "Completed":
+                active_tasks.pop(ip)
+                print(f"Task {task_id} on {ip} has completed.")
+                task_dir.mkdir(exist_ok=True)
+                api.get_benchmark_results(task_id, task_dir)
+            elif status == "Error":
+                active_tasks.pop(ip)
+                print(f"Task {task_id} on {ip} has encountered an error.")
+            elif status == "Running":
+                print(f"Task {task_id} on {ip} is still running.")
+            elif status is None:
+                active_tasks.pop(ip)
+                print(f"Task {task_id} on {ip} is not found.")
+        if active_tasks:
+            print("Waiting for tasks to complete...")
+            time.sleep(10)
+
+def launch_competitive_benchmark(NodeList: List[Dict[str, Any]], benchmark_params: Dict[str, int]) -> None:
+    # Prompt user for benchmark parameters (ps, qs, n, nb, instances_num)
+    print("Enter benchmark parameters:")
+    benchmark_environment = setup_benchmark_environment()
+
     active_tasks = {}
-
-    # Submit benchmarks to each node.
-    for node in menu_handler.nodes:
+    # Submit benchmark request to all registered nodes
+    for node in NodeList:
         ip = node["ip"]
         port = node["data"].get("metrics", {}).get("node_port", 5000)
         node_api = NodeAPI(ip, port)
-        task_id = node_api.submit_competitive_benchmark(params)
+        task_id = node_api.submit_competitive_benchmark(
+            ps=benchmark_params["ps"],
+            qs=benchmark_params["qs"],
+            n_value=benchmark_params["n"],
+            nb=benchmark_params["nb"],
+            instances_num=benchmark_params["instances_num"]
+        )
 
         if task_id:
-            node_dir = benchmark_dir / ip
+            node_dir = benchmark_environment / ip
             node_dir.mkdir(exist_ok=True)
             active_tasks[ip] = {
                 "task_id": task_id,
@@ -43,34 +67,48 @@ def launch_and_monitor(menu_handler, params: Dict[str, int], benchmark_dir: Path
         else:
             print(f"Failed to submit benchmark for {ip}")
 
-    # Monitor benchmarks until all tasks complete.
-    print("\nMonitoring benchmarks...")
-    while active_tasks:
-        time.sleep(5)
-        completed = []
+    # Wait for all tasks to complete
+    wait_benchmark_completion(active_tasks) 
 
-        for ip, task_info in active_tasks.items():
-            status = task_info["api"].check_status(task_info["task_id"])
+def launch_cooperative_benchmark(NodeList: List[Dict[str, Any]], benchmark_params: Dict[str, int]) -> None:
+    print("Enter benchmark parameters:")
+    benchmark_environment = setup_benchmark_environment()
 
-            if not status:
-                print(f"Status fetch failed for {ip}")
-                completed.append(ip)
-            elif status.lower() == "completed":
-                # Retrieve results
-                success = task_info["api"].get_results(task_info["task_id"], task_info["dir"])
-                if success:
-                    print(f"Completed benchmark for {ip} - Task ID: {task_info['task_id']}")
-                    menu_handler.benchmark_results[ip] = task_info["task_id"]
-                completed.append(ip)
-            elif status.lower() == "running":
-                print(f"Benchmark still running for {ip}...")
-            else:
-                print(f"Unexpected status '{status}' for {ip}")
-                completed.append(ip)
+    active_tasks = {}
 
-        # Remove completed tasks from the active_tasks dictionary.
-        for ip in completed:
-            active_tasks.pop(ip, None)
+    first_node = NodeList[0]
+    ip = first_node["ip"]
+    port = first_node["data"].get("metrics", {}).get("node_port", 5000)
+    node_slots = {node["ip"]: benchmark_params["node_slots"] for node in NodeList}
+    node_api = NodeAPI(ip, port)
+    task_id = node_api.submit_cooperative_benchmark(
+            ps=benchmark_params["ps"],
+            qs=benchmark_params["qs"],
+            n_value=benchmark_params["n_value"],
+            nb=benchmark_params["nb"],
+            node_slots=node_slots
+        )
+
+    if task_id:
+        active_tasks[ip] = {
+            "task_id": task_id,
+            "api": node_api,
+            "dir": benchmark_environment / ip,
+        }
+        print(f"Started cooperative benchmark on {ip} - Task ID: {task_id}")
+        print("Connected nodes : ", node_slots)
+
+    wait_benchmark_completion(active_tasks)
+
+def setup_benchmark_environment() -> Path:
+    """
+    Create a new directory named with the current timestamp to store benchmark results.
+    """
+    benchmark_dir = Path(
+        f"benchmarks/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+    )
+    benchmark_dir.mkdir(parents=True, exist_ok=True)
+    return benchmark_dir
 
 def generate_ssh_key() -> None:
     """

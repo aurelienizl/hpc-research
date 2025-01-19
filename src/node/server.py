@@ -17,7 +17,7 @@ API_HOST = os.getenv("API_HOST", "0.0.0.0")
 API_PORT = int(os.getenv("API_PORT", 5000))
 
 # Master Configuration Constants
-MASTER_IP = os.getenv("MASTER_IP", "192.168.122.161")
+MASTER_IP = os.getenv("MASTER_IP", "127.0.0.1")
 MASTER_PORT = int(os.getenv("MASTER_PORT", 8000))
 
 
@@ -130,7 +130,7 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
 
         return jsonify({"task_id": task_id, "results": results}), 200
 
-    @app.route("/ping", methods=["POST"])
+    @app.route("/ping", methods=["GET"])
     @safe_endpoint(log_interface)
     def ping():
         return jsonify({"message": "pong"}), 200
