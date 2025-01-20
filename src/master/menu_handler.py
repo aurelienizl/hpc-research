@@ -83,13 +83,20 @@ class MenuHandler:
         return params
 
     def run_cooperative_benchmark(self) -> None:
+        runs = int(input("Enter the number of benchmark to run continuously: "))
         benchmark_params = self.prompt_for_params(["ps", "qs", "n_value", "nb", "node_slots"])
-        logic.launch_cooperative_benchmark(self.NODES_LIST, benchmark_params=benchmark_params)
-
+        for i in range(runs):
+            print(f"Run {i+1}/{runs}")
+            logic.launch_cooperative_benchmark(self.NODES_LIST, benchmark_params=benchmark_params)
+        print("Benchmark runs completed.")
 
     def run_competitive_benchmark(self) -> None:
+        runs = int(input("Enter the number of benchmark to run continuously: "))
         benchmark_params = self.prompt_for_params(["ps", "qs", "n", "nb", "instances_num"])
-        logic.launch_competitive_benchmark(self.NODES_LIST, benchmark_params=benchmark_params)
+        for i in range(runs):
+            print(f"Run {i+1}/{runs}")
+            logic.launch_competitive_benchmark(self.NODES_LIST, benchmark_params=benchmark_params)  
+        print("Benchmark runs completed.")
 
 
     def clear_screen(self) -> None:
