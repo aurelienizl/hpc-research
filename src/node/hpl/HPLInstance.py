@@ -82,7 +82,9 @@ class HPLInstance:
         """
 
         hpl_command = f"mpirun --allow-run-as-root -np {self.process_count} {self.custom_params} {self.hpl_binary}"
-        
+        if self.process_count < 2:
+            hpl_command = f"{self.hpl_binary}"
+
         self.logger.info(f"HPL command: {hpl_command}")
         return hpl_command
 
