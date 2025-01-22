@@ -1,19 +1,24 @@
 #! /bin/bash
 
-if [ "$EUID" -ne 0 ]
-  then echo "Please run as root"
-  exit
-fi
+set -e
 
-# Check if python3 python3-flask are installed
-if [ -z "$(which python3)" ] || [ -z "$(which flask)" ]
-  then echo "Please re-run install.sh"
-  exit
-fi
+# Create and activate virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install requirements
+pip install -r requirements.txt
 
 # Clean up
-sudo bash clean.sh
+bash clean.sh
 
-cd scripts
-sudo python3 server.py
-cd ..
+# Run server
+if [ "$1" == "--master" ]; then
+   cd src/master
+   python3 main.py
+else
+   cd src/node
+   python3 server.py
+fi
+
+deactivate
