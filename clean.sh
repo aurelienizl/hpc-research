@@ -18,6 +18,9 @@ find . -type d -name "results" -exec rm -r {} +
 # Find and remove all HPLConfigurations directories
 find . -type d -name "benchmarks" -exec rm -r {} +
 
+# Find and remove all HPLConfigurations directories
+find . -type d -name "venv" -exec rm -r {} +
+
 # Remove the collectl file in /tmp/collectl_pids
 rm -rf /tmp/collectl_pids
 
