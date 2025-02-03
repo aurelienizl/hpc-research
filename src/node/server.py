@@ -112,7 +112,7 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
 
         return jsonify({"task_id": task_id, "results": results}), 200
 
-    @app.route("/ping", methods=["POST"])
+    @app.route("/ping", methods=["GET"])
     def ping():
         return jsonify({"message": "pong"}), 200
     return app
