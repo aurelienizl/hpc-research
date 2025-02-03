@@ -8,7 +8,6 @@ from threading import Lock
 
 from hpl.HPLConfig import HPLConfig
 from hpl.HPLInstance import HPLInstance
-from collectl.CollectlInterface import CollectlInterface
 from log.LogInterface import LogInterface
 
 
@@ -20,17 +19,11 @@ class Scheduler:
 
     RESULT_DIR = Path("../results")
 
-    class TaskAlreadyRunningException(Exception):
-        """Exception raised when a task is already running."""
-
-        pass
-
     def __init__(self, log_interface: LogInterface):
         """
         Initialize the Scheduler.
         """
         self.hpl_config = HPLConfig()
-        self.collectl_interface = CollectlInterface(log_interface)  # Pass LogInterface
         self.log_interface = log_interface
 
         # Single task tracking
@@ -93,14 +86,9 @@ class Scheduler:
             custom_params=f"-hostfile hosts.txt --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\"",
         )
 
-        collectl_log_path = task_result_dir / "collectl.log"
-        self.collectl_interface.start_collectl(instance_id, collectl_log_path)
-
         process = Process(target=self._run_instance, args=(hpl_instance, instance_id))
         process.start()
         process.join()
-
-        self.collectl_interface.stop_collectl(instance_id)
 
         with self.status_lock:
             self.task_status[instance_id] = "Completed"
@@ -162,7 +150,6 @@ class Scheduler:
             hpl_instances.append(hpl_instance)
 
         collectl_log_path = task_result_dir / "collectl.log"
-        self.collectl_interface.start_collectl(instance_id, collectl_log_path)
 
         # Execute HPL instances using multiprocessing.Process
         processes = []
@@ -174,9 +161,6 @@ class Scheduler:
         # Wait for all processes to complete
         for process in processes:
             process.join()
-
-        # Stop Collectl monitoring
-        self.collectl_interface.stop_collectl(instance_id)
 
         # Update task status
         with self.status_lock:
