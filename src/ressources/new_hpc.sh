@@ -12,10 +12,9 @@ set -e  # Exit immediately if a command exits with a non-zero status
 # Logging Function
 # -----------------------------------------------------------------------------
 log() {
-    echo "[$(date)] $1"
+    local message="[$(date)] $1"
+    echo "$message" | tee -a log.txt
 }
-
-# -----------------------------------------------------------------------------
 # Utility Functions
 # -----------------------------------------------------------------------------
 
@@ -206,7 +205,7 @@ cleanup() {
 }
 
 #   -----------------------------------------------------------------------------
-#   Setup HPC-RESEARCH
+#   System services handling
 #   -----------------------------------------------------------------------------
 
 create_startup_script() {
@@ -289,13 +288,33 @@ EOF
     systemctl enable hpc-init.service
 }
 
+is_systemctl_installed() {
+    command -v systemctl >/dev/null 2>&1
+    }
+
+#   -----------------------------------------------------------------------------
+#   Setup HPC-RESEARCH
+#   -----------------------------------------------------------------------------
+
+
 # -----------------------------------------------------------------------------
 # Main Execution Flow
 # -----------------------------------------------------------------------------
 
 main() {
+    if [ "$1" == "--master" ]; then
+        log "Master mode selected. Installing Collectl and exiting."
+        install_collectl
+        exit 0
+    elif [ "$1" == "--node" ]; then
+        log "Node mode selected. Proceeding with full setup."
+    else
+        echo "Usage: $0 [--master|--node]"
+        exit 1
+    fi
+
     log "Updating package list and installing essential packages..."
-    sudo apt-get update 
+    sudo apt-get update
     sudo apt-get install -y python3 python3-venv git curl openssl
 
     create_user_if_needed
@@ -318,8 +337,14 @@ main() {
         cleanup
     fi
 
-    create_startup_script
+    log "Checking if systemctl is installed..."
+    if is_systemctl_installed; then
+        create_startup_script
+    else
+        log "systemctl is not installed. Skipping startup script creation."
+    fi
+
     log "HPC-RESEARCH setup completed successfully."
 }
 
-main
+main "$@"
