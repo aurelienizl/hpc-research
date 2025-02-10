@@ -7,8 +7,6 @@ from typing import Dict, List, Any
 
 from node_api import NodeAPI
 
-
-
 def wait_benchmark_completion(active_tasks: Dict[str, Dict[str, any]]) -> None:
     while active_tasks:
         for ip, task in list(active_tasks.items()):
@@ -36,70 +34,6 @@ def wait_benchmark_completion(active_tasks: Dict[str, Dict[str, any]]) -> None:
             print("Waiting for tasks to complete...")
             time.sleep(10)
 
-def launch_competitive_benchmark(NodeList: List[Dict[str, Any]], benchmark_params: Dict[str, int]) -> None:
-    # Prompt user for benchmark parameters (ps, qs, n, nb, instances_num)
-    print("Enter benchmark parameters:")
-    benchmark_environment = setup_benchmark_environment()
-
-    active_tasks = {}
-    # Submit benchmark request to all registered nodes
-    for node in NodeList:
-        ip = node["ip"]
-        port = node["data"].get("metrics", {}).get("node_port", 5000)
-        node_api = NodeAPI(ip, port)
-        task_id = node_api.submit_competitive_benchmark(
-            ps=benchmark_params["ps"],
-            qs=benchmark_params["qs"],
-            n_value=benchmark_params["n"],
-            nb=benchmark_params["nb"],
-            instances_num=benchmark_params["instances_num"]
-        )
-
-        if task_id:
-            node_dir = benchmark_environment / ip
-            node_dir.mkdir(exist_ok=True)
-            active_tasks[ip] = {
-                "task_id": task_id,
-                "api": node_api,
-                "dir": node_dir,
-            }
-            print(f"Started benchmark for {ip} - Task ID: {task_id}")
-        else:
-            print(f"Failed to submit benchmark for {ip}")
-
-    # Wait for all tasks to complete
-    wait_benchmark_completion(active_tasks) 
-
-def launch_cooperative_benchmark(NodeList: List[Dict[str, Any]], benchmark_params: Dict[str, int]) -> None:
-    print("Enter benchmark parameters:")
-    benchmark_environment = setup_benchmark_environment()
-
-    active_tasks = {}
-
-    first_node = NodeList[0]
-    ip = first_node["ip"]
-    port = first_node["data"].get("metrics", {}).get("node_port", 5000)
-    node_slots = {node["ip"]: benchmark_params["node_slots"] for node in NodeList}
-    node_api = NodeAPI(ip, port)
-    task_id = node_api.submit_cooperative_benchmark(
-            ps=benchmark_params["ps"],
-            qs=benchmark_params["qs"],
-            n_value=benchmark_params["n_value"],
-            nb=benchmark_params["nb"],
-            node_slots=node_slots
-        )
-
-    if task_id:
-        active_tasks[ip] = {
-            "task_id": task_id,
-            "api": node_api,
-            "dir": benchmark_environment / ip,
-        }
-        print(f"Started cooperative benchmark on {ip} - Task ID: {task_id}")
-        print("Connected nodes : ", node_slots)
-
-    wait_benchmark_completion(active_tasks)
-
 def setup_benchmark_environment() -> Path:
     """
     Create a new directory named with the current timestamp to store benchmark results.
@@ -109,6 +43,105 @@ def setup_benchmark_environment() -> Path:
     )
     benchmark_dir.mkdir(parents=True, exist_ok=True)
     return benchmark_dir
+
+def launch_competitive_benchmark(NodeList: List[Dict[str, Any]], benchmark_params: Dict[str, int]) -> None:
+    print("Launching competitive benchmark...")
+    # Create a dedicated benchmark results directory
+    benchmark_environment = setup_benchmark_environment()
+
+    # Start the master collectl process:
+    collectl_log_path = benchmark_environment / "master_collectl.log"
+    log_file = open(collectl_log_path, "w")
+    print("Starting collectl on master.")
+    collectl_proc = subprocess.Popen(
+        ["collectl", "-oT", "-scCdmn", "--export", "lexpr"],
+        stdout=log_file,
+        stderr=subprocess.STDOUT
+    )
+
+    try:
+        active_tasks = {}
+        # Submit benchmark requests to all registered nodes
+        for node in NodeList:
+            ip = node["ip"]
+            port = node["data"].get("metrics", {}).get("node_port", 5000)
+            node_api = NodeAPI(ip, port)
+            task_id = node_api.submit_competitive_benchmark(
+                ps=benchmark_params["ps"],
+                qs=benchmark_params["qs"],
+                n_value=benchmark_params["n"],
+                nb=benchmark_params["nb"],
+                instances_num=benchmark_params["instances_num"]
+            )
+
+            if task_id:
+                node_dir = benchmark_environment / ip
+                node_dir.mkdir(exist_ok=True)
+                active_tasks[ip] = {
+                    "task_id": task_id,
+                    "api": node_api,
+                    "dir": node_dir,
+                }
+                print(f"Started benchmark for {ip} - Task ID: {task_id}")
+            else:
+                print(f"Failed to submit benchmark for {ip}")
+
+        # Wait for all tasks to complete
+        wait_benchmark_completion(active_tasks)
+    finally:
+        # Stop the collectl process as soon as the benchmark run is done
+        print("Stopping collectl on master.")
+        collectl_proc.terminate()
+        collectl_proc.wait()
+        log_file.close()
+
+def launch_cooperative_benchmark(NodeList: List[Dict[str, Any]], benchmark_params: Dict[str, int]) -> None:
+    print("Launching cooperative benchmark...")
+    benchmark_environment = setup_benchmark_environment()
+
+    # Start the master collectl process:
+    collectl_log_path = benchmark_environment / "master_collectl.log"
+    log_file = open(collectl_log_path, "w")
+    print("Starting collectl on master.")
+    collectl_proc = subprocess.Popen(
+        ["collectl", "-oT", "-scCdmn", "--export", "lexpr"],
+        stdout=log_file,
+        stderr=subprocess.STDOUT
+    )
+
+    try:
+        active_tasks = {}
+
+        first_node = NodeList[0]
+        ip = first_node["ip"]
+        port = first_node["data"].get("metrics", {}).get("node_port", 5000)
+        node_slots = {node["ip"]: benchmark_params["node_slots"] for node in NodeList}
+        node_api = NodeAPI(ip, port)
+        task_id = node_api.submit_cooperative_benchmark(
+                ps=benchmark_params["ps"],
+                qs=benchmark_params["qs"],
+                n_value=benchmark_params["n_value"],
+                nb=benchmark_params["nb"],
+                node_slots=node_slots
+            )
+
+        if task_id:
+            active_tasks[ip] = {
+                "task_id": task_id,
+                "api": node_api,
+                "dir": benchmark_environment / ip,
+            }
+            print(f"Started cooperative benchmark on {ip} - Task ID: {task_id}")
+            print("Connected nodes : ", node_slots)
+
+        # Wait for the benchmark to complete
+        wait_benchmark_completion(active_tasks)
+    finally:
+        # Stop the collectl process after the benchmark run
+        print("Stopping collectl on master.")
+        collectl_proc.terminate()
+        collectl_proc.wait()
+        log_file.close()
 
 def generate_ssh_key() -> None:
     """

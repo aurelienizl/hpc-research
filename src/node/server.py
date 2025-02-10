@@ -17,28 +17,13 @@ API_HOST = os.getenv("API_HOST", "0.0.0.0")
 API_PORT = int(os.getenv("API_PORT", 5000))
 
 # Master Configuration Constants
-MASTER_IP = os.getenv("MASTER_IP", "192.168.1.160")
+MASTER_IP = os.getenv("MASTER_IP", "192.168.122.1")
 MASTER_PORT = int(os.getenv("MASTER_PORT", 8000))
-
-
-def safe_endpoint(log_interface):
-    """Decorator for generic error handling in Flask endpoints."""
-    def decorator(func):
-        def wrapper(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except Exception as e:
-                return jsonify({"error": "Internal Server Error"}), 500
-        wrapper.__name__ = func.__name__
-        return wrapper
-    return decorator
 
 
 def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
     app = Flask(__name__)
-
     @app.route("/submit_cooperative_benchmark", methods=["POST"])
-    @safe_endpoint(log_interface)
     def submit_cooperative_benchmark():
         '''
         TODO: Check if the request is a valid JSON payload.
@@ -74,7 +59,6 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
             return jsonify({"error": "Resource busy. Another benchmark is currently running."}), 409
 
     @app.route("/submit_competitive_benchmark", methods=["POST"])
-    @safe_endpoint(log_interface)
     def submit_competitive_benchmark():
         data: Dict[str, Any] = request.get_json()
         if not data:
@@ -98,7 +82,6 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
         return jsonify({"error": "Resource busy. Another benchmark is currently running."}), 409
 
     @app.route("/task_status/<task_id>", methods=["GET"])
-    @safe_endpoint(log_interface)
     def task_status_endpoint(task_id: str):
         status = worker.scheduler.get_task_status(task_id)
         if status is None:
@@ -107,7 +90,6 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
         return jsonify({"task_id": task_id, "status": status}), 200
 
     @app.route("/get_results/<task_id>", methods=["GET"])
-    @safe_endpoint(log_interface)
     def get_results(task_id: str):
         result_dir = worker.scheduler.RESULT_DIR / task_id
         if not result_dir.exists() or not result_dir.is_dir():
@@ -130,11 +112,9 @@ def create_app(worker: Worker, log_interface: LogInterface) -> Flask:
 
         return jsonify({"task_id": task_id, "results": results}), 200
 
-    @app.route("/ping", methods=["POST"])
-    @safe_endpoint(log_interface)
+    @app.route("/ping", methods=["GET"])
     def ping():
         return jsonify({"message": "pong"}), 200
-
     return app
 
 
