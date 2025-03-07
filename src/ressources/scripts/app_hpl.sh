@@ -51,9 +51,10 @@ install_hpl() {
     cp Make.UNKNOWN ../Make.linux
     cd ..
 
+    #Export OpenMPI path for mpicc
     export PATH=$PATH:/hpc/OpenMPI/bin/
 
-    # Replace the line ARCH         = UNKNOWN by ARCH         = linux
+    # Configure HPL
     sed -i 's/ARCH         = UNKNOWN/ARCH         = linux/g' Make.linux
 
     sed -i -e 's|^MPdir[[:space:]]*=.*|MPdir        = /hpc/OpenMPI|' \
@@ -64,7 +65,11 @@ install_hpl() {
        -e 's|^LAinc[[:space:]]*=.*|LAinc        =|' \
        -e 's|^LAlib[[:space:]]*=.*|LAlib        = $(LAdir)/lib/libopenblas.a|' Make.linux
 
+    # Compile HPL
     make arch=linux
+
+    # Move HPL binary to /usr/local/bin
+    sudo cp bin/linux/xhpl /usr/local/bin
 
     log "HPL installed successfully."
 }

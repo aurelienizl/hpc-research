@@ -29,9 +29,14 @@ install_netpipe() {
 
     export PATH=$PATH:/hpc/OpenMPI/bin/
 
+    # Configure NetPIPE
     sed -i 's|^MPI2_INC =.*|MPI2_INC = /hpc/OpenMPI/include|' makefile
 
+    # Compile NetPIPE  
     make mpi
+
+    # Move NetPIPE binary to /usr/local/bin
+    sudo cp NPmpi /usr/local/bin
 
     log "NetPIPE installed successfully."
 }

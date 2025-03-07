@@ -28,6 +28,8 @@ install_collectl() {
     gunzip -c collectl-4.3.1.src.tar.gz | tar xf -
     cd collectl-4.3.1
     sudo chmod +x INSTALL
+
+    # Install Collectl, handled by the INSTALL script
     sudo bash INSTALL
 
     log "Collectl installed successfully."
