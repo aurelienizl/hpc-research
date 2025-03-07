@@ -1,6 +1,6 @@
 set -e 
 
-source "$(dirname "$0")/log.sh"
+source "$(dirname "$0")/ext_log.sh"
 
 required_libs=( 
     openssl
@@ -99,3 +99,6 @@ EOF
     systemctl daemon-reload
     systemctl enable hpc-init.service
 }
+
+create_user_if_needed
+create_startup_script

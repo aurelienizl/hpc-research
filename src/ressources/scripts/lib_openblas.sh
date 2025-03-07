@@ -1,6 +1,6 @@
 set -e 
 
-source "$(dirname "$0")/log.sh"
+source "$(dirname "$0")/ext_log.sh"
 
 required_libs=( 
     libpcre3
