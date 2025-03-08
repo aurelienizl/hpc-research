@@ -28,8 +28,8 @@ install_openblas() {
     git clone "$openblas_url"
     cd OpenBLAS
     git checkout v0.3.17
-    make -j"$(nproc)" 
-    make PREFIX=/hpc/OpenBLAS install
+    make -j"$(nproc)" all
+    make PREFIX=/hpc/OpenBLAS install 
 
     log "OpenBLAS installed successfully."
 }

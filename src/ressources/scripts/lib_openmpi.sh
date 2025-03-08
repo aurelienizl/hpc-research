@@ -10,6 +10,7 @@ required_libs=(
     libhwloc-dev 
     libevent-dev 
     gfortran
+    zlib1g-dev
 )
 
 openmpi_url="https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-5.0.7.tar.gz"
@@ -34,6 +35,10 @@ install_openmpi() {
     ./configure --prefix=/hpc/OpenMPI
     make -j"$(nproc)"
     make install
+
+    # Move OpenMPI binary to /usr/local/bin
+    sudo cp /hpc/OpenMPI/bin/* /usr/local/bin
+    
 
     log "OpenMPI installed successfully."
 }
