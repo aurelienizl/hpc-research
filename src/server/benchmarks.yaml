@@ -23,4 +23,4 @@
   target_nodes: 
     - "156cf788e220"
   instances_loop: 5
-  instances_parallel: 8
+  instances_parallel: 4
