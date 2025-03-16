@@ -7,7 +7,7 @@ from WebClients.WebClientHandler import WebClientHandler
 from Menu.SimpleMenu import SimpleMenu
 
 class WebSocketServer:
-    def __init__(self, host="localhost", port=8765):
+    def __init__(self, host="0.0.0.0", port=8765):
         self.host = host
         self.port = port
         self.logger = LogInterface(log_verbose=True)
