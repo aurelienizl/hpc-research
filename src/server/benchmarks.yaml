@@ -14,7 +14,7 @@
 #  instances_parallel: 2
 
 - benchmark: netpipe
-  id: "netpipe-1vm-local"
+  id: "netpipe-2vm-local"
   command_line: "-np 2 --bind-to none"
   config_params: 
     {}
@@ -22,5 +22,6 @@
     {}
   target_nodes: 
     - "156cf788e220"
+    - "9f081b331d08"
   instances_loop: 5
   instances_parallel: 4
