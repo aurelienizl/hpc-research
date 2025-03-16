@@ -27,7 +27,7 @@ install_openblas() {
     [ -d "OpenBLAS" ] && rm -rf "OpenBLAS"
     git clone "$openblas_url"
     cd OpenBLAS
-    git checkout v0.3.17
+    git checkout v0.3.29
     make -j"$(nproc)" all
     make PREFIX=/hpc/OpenBLAS install 
 
