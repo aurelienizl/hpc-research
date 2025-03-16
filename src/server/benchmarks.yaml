@@ -14,12 +14,13 @@
 #  instances_parallel: 2
 
 - benchmark: netpipe
-  id: "netpipe-2vm-local"
+  id: "netpipe-2vm-intra"
   command_line: "-np 2 --bind-to none"
   config_params: 
     {}
   openmpi_hosts: 
-    {}
+    "192.168.1.167": 1
+    "192.168.1.194": 1
   target_nodes: 
     - "156cf788e220"
     - "9f081b331d08"
