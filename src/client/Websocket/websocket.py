@@ -19,7 +19,7 @@ class BenchmarkWebSocketClient:
         data = json.loads(message)
         self.logger.info(f"Received message...")
         if data["message"] == "start_benchmark":
-            self.logger.info(f"Starting benchmark: {data["message"]}")
+            self.logger.info(f"Starting benchmark: {data['message']}")
             task_id = data["task_id"]
             benchmark = data["benchmark"]
             command_line = data["command_line"]
@@ -27,17 +27,17 @@ class BenchmarkWebSocketClient:
             success = self.interface.start_benchmark(benchmark, task_id, command_line, **config_params)
             return json.dumps(success)
         elif data["message"] == "get_benchmark_status":
-            self.logger.info(f"Getting benchmark status of task: {data["task_id"]}")
+            self.logger.info(f"Getting benchmark status of task: {data['task_id']}")
             task_id = data["task_id"]
             status = self.interface.get_benchmark_status(task_id)
             return json.dumps(status)
         elif data["message"] == "get_benchmark_results":
-            self.logger.info(f"Getting benchmark results of task: {data["task_id"]}")
+            self.logger.info(f"Getting benchmark results of task: {data['task_id']}")
             task_id = data["task_id"]
             results = self.interface.get_benchmark_results(task_id)
             return json.dumps(results)
         elif data["message"] == "stop_benchmark":
-            self.logger.info(f"Stopping benchmark: {data["task_id"]}")
+            self.logger.info(f"Stopping benchmark: {data['task_id']}")
             task_id = data["task_id"]
             success = self.interface.stop_benchmark(task_id)
             return json.dumps(success)
