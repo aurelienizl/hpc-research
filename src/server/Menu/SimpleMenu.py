@@ -1,5 +1,5 @@
 from WebClients import WebClientHandler
-from Benchmarks.benchmarksHandler import BenchmarksHandler  
+from Benchmarks.BenchmarksHandler import BenchmarksHandler  
 from Log import LogInterface
 import asyncio
 import sys

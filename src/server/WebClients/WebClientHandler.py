@@ -3,7 +3,7 @@ import json
 
 from Log import LogInterface
 from WebClients.WebClient import WebClient
-from Benchmarks.benchmarksHandler import BenchmarksHandler
+from Benchmarks.BenchmarksHandler import BenchmarksHandler
 
 class WebClientHandler:
 
