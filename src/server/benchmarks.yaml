@@ -15,7 +15,7 @@
 
 - benchmark: netpipe
   id: "netpipe-1vm-local"
-  command_line: "-np 2"
+  command_line: "-np 2 --bind-to none"
   config_params: 
     {}
   openmpi_hosts: 
