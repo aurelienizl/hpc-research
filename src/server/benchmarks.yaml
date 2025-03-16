@@ -1,26 +1,26 @@
-- benchmark: hpl
-  id: "1"
-  command_line: "-np 4"
-  config_params:
-    p: 2
-    q: 2
-    nb: 192
-    n: 1000
-  openmpi_hosts:
-    {}
-  target_nodes:
-    - "hpc-research"
-  instances_loop: 2
-  instances_parallel: 2
+#- benchmark: hpl
+#  id: "hpl-1vm-comp"
+#  command_line: "-np 1"
+#  config_params:
+#    p: 1
+#    q: 1
+#    nb: 192
+#    n: 10000
+#  openmpi_hosts:
+#    {}
+#  target_nodes:
+#    - "hpc-research"
+#  instances_loop: 2
+#  instances_parallel: 2
 
 - benchmark: netpipe
-  id: "2"
+  id: "netpipe-1vm-local"
   command_line: "-np 2"
   config_params: 
     {}
   openmpi_hosts: 
     {}
   target_nodes: 
-    - "hpc-research"
-  instances_loop: 2
-  instances_parallel: 2
+    - "156cf788e220"
+  instances_loop: 5
+  instances_parallel: 8
