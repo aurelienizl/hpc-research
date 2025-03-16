@@ -1,0 +1,26 @@
+- benchmark: hpl
+  id: "1"
+  command_line: "-np 4"
+  config_params:
+    p: 2
+    q: 2
+    nb: 192
+    n: 1000
+  openmpi_hosts:
+    {}
+  target_nodes:
+    - "hpc-research"
+  instances_loop: 2
+  instances_parallel: 2
+
+- benchmark: netpipe
+  id: "2"
+  command_line: "-np 2"
+  config_params: 
+    {}
+  openmpi_hosts: 
+    {}
+  target_nodes: 
+    - "hpc-research"
+  instances_loop: 2
+  instances_parallel: 2

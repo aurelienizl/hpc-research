@@ -14,11 +14,11 @@ bash clean.sh
 
 # Run server
 if [ "$1" == "--master" ]; then
-   cd src/master
-   python3 main.py
-else
-   cd src/node
+   cd src/server
    python3 server.py
+else
+   cd src/client
+   python3 client.py
 fi
 
 deactivate

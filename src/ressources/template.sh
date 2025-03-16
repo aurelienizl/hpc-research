@@ -96,10 +96,6 @@ echo "Clearing bash history..."
 cat /dev/null > ~/.bash_history
 history -c
 
-# 8. Remove SSH keys
-echo "Removing SSH host keys..."
-rm -f /etc/ssh/ssh_host_*
-
 # 9. Clear cloud-init if installed
 if [ -f /etc/cloud/cloud.cfg ]; then
    echo "Cleaning cloud-init..."
