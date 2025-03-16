@@ -27,6 +27,21 @@ create_user_if_needed() {
         log "User '$username' created with password: $password"
         log "Please record this password securely."
         chmod 600 password.txt
+
+        # Generate SSH key for the user
+        log "Generating SSH key for user '$username'..."
+        sudo -u "$username" ssh-keygen -t rsa -b 4096 -f "/home/$username/.ssh/id_rsa" -N ""
+
+        # Ensure .ssh directory has proper permissions
+        sudo -u "$username" mkdir -p "/home/$username/.ssh"
+        chmod 700 "/home/$username/.ssh"
+
+        # Add the public key to authorized_keys
+        sudo -u "$username" cat "/home/$username/.ssh/id_rsa.pub" >> "/home/$username/.ssh/authorized_keys"
+        chmod 600 "/home/$username/.ssh/authorized_keys"
+        chown "$username:$username" "/home/$username/.ssh/authorized_keys"
+
+        log "SSH key generated and added to authorized_keys for user '$username'"
     fi
 }
 

@@ -58,31 +58,26 @@ EOF
 # Enable the service
 systemctl enable first-boot-init
 
-# 3. Update and clean system
 echo "Updating and cleaning system..."
 apt update
 apt upgrade -y
 apt autoremove -y
 apt clean
 
-# 4. Clear logs and temporary files
 echo "Clearing logs and temporary files..."
 find /var/log -type f -exec truncate -s 0 {} \;
 rm -rf /tmp/*
 rm -rf /var/tmp/*
 
-# 5. Remove machine-specific information
 echo "Removing machine-specific information..."
 truncate -s 0 /etc/machine-id
 rm -f /var/lib/dbus/machine-id
 ln -s /etc/machine-id /var/lib/dbus/machine-id
 
-# 6. Clear network configuration
 echo "Cleaning network configuration..."
 rm -f /etc/udev/rules.d/70-persistent-net.rules
 rm -f /lib/udev/rules.d/75-persistent-net-generator.rules
 
-# Create a basic netplan configuration
 cat > /etc/netplan/00-template.yaml << EOF
 network:
   version: 2
@@ -91,24 +86,14 @@ network:
       dhcp4: true
 EOF
 
-# 7. Clear bash history
 echo "Clearing bash history..."
 cat /dev/null > ~/.bash_history
 history -c
 
-# 9. Clear cloud-init if installed
 if [ -f /etc/cloud/cloud.cfg ]; then
    echo "Cleaning cloud-init..."
    cloud-init clean --logs
 fi
-
-# 10. Final security configurations
-echo "Setting up final security configurations..."
-#cat > /etc/ssh/sshd_config.d/hardening.conf << EOF
-#PermitRootLogin no
-#PasswordAuthentication no
-#MaxAuthTries 3
-#EOF
 
 sudo ufw disable
 
