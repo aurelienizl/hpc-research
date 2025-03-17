@@ -33,7 +33,7 @@
   config_params: 
     {}
   openmpi_hosts: 
-    "192.168.1.194": 1  # Target node
+    "192.168.1.167": 1  # Target node
     "127.0.0.1": 1      # Always self
   target_nodes: 
     - "156cf788e220"
