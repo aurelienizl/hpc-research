@@ -19,7 +19,8 @@ class BenchmarkInstance:
             instances_loop (int): Number of loop iterations for the benchmark.
         """
         openmpi_hosts = openmpi_hosts if openmpi_hosts is not None else {}
-        openmpi_hosts_str = ' '.join([f"--host {ip} -N {slots}" for ip, slots in openmpi_hosts.items()])
+        hosts_list = [f"{ip}:{slots}" for ip, slots in openmpi_hosts.items()]
+        openmpi_hosts_str = f"--host {','.join(hosts_list)}" if hosts_list else ""
         full_command_line = f"{command_line} {openmpi_hosts_str}"
         
         self.benchmark_name = benchmark_name
