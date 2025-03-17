@@ -29,7 +29,7 @@
 
 - benchmark: netpipe
   id: "netpipe-4vm-local"
-  command_line: "-np 2 --bind-to none"
+  command_line: "-np 2 --bind-to none --oversubscribe"
   config_params: 
     {}
   openmpi_hosts: 
