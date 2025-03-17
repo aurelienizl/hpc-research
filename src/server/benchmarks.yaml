@@ -28,7 +28,7 @@
 #  instances_parallel: 2
 
 - benchmark: netpipe
-  id: "netpipe-4vm-local"
+  id: "netpipe-8vm-local"
   command_line: "-np 2 --bind-to none --oversubscribe"
   config_params: 
     {}
