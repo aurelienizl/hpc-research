@@ -39,5 +39,9 @@
     - "5e03942799b4"
     - "9f081b331d08"
     - "79ffea67b10d"
+    - "285e3b651bcc"
+    - "85782fce3ab8"
+    - "7deec127111e"
+    - "79df5a0f741b"
   instances_loop: 5
-  instances_parallel: 2
+  instances_parallel: 1
