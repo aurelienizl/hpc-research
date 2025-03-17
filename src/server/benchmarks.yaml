@@ -28,7 +28,7 @@
 #  instances_parallel: 2
 
 - benchmark: netpipe
-  id: "netpipe-1vm-local"
+  id: "netpipe-bm-net"
   command_line: "-np 2 --bind-to none"
   config_params: 
     {}
@@ -36,6 +36,6 @@
     "127.0.0.1" : 1
     "192.168.1.251" : 1
   target_nodes: 
-    - "156cf788e220"
+    - "prox-research"
   instances_loop: 5
-  instances_parallel: 8
+  instances_parallel: 1
