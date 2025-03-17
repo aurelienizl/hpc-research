@@ -28,6 +28,18 @@
 #  instances_parallel: 2
 
 - benchmark: netpipe
+  id: "netpipe-bm-loc"
+  command_line: "-np 2 --bind-to none"
+  config_params: 
+    {}
+  openmpi_hosts: 
+    {}
+  target_nodes: 
+    - "prox-research"
+  instances_loop: 5
+  instances_parallel: 8
+
+- benchmark: netpipe
   id: "netpipe-bm-net"
   command_line: "-np 2 --bind-to none"
   config_params: 
@@ -38,4 +50,4 @@
   target_nodes: 
     - "prox-research"
   instances_loop: 5
-  instances_parallel: 1
+  instances_parallel: 8
