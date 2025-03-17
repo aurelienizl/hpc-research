@@ -3,7 +3,7 @@ from Websocket.websocket import BenchmarkWebSocketClient
 
 
 async def main():
-    uri = "ws://192.168.1.250:8765"
+    uri = "ws://192.168.1.126:8765"
     client = BenchmarkWebSocketClient(uri, api_key="12345678", verbose=True)
     await client.connect()
 
