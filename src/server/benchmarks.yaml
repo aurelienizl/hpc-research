@@ -28,21 +28,14 @@
 #  instances_parallel: 2
 
 - benchmark: netpipe
-  id: "netpipe-8vm-intra"
-  command_line: "-np 2 --bind-to none --oversubscribe"
+  id: "netpipe-1vm-local"
+  command_line: "-np 2 --bind-to none"
   config_params: 
     {}
   openmpi_hosts: 
-    "192.168.1.167": 1  # Target node
-    "127.0.0.1": 1      # Always self
+    "127.0.0.1" : 1
+    "192.168.1.251" : 1
   target_nodes: 
     - "156cf788e220"
-    - "5e03942799b4"
-    - "9f081b331d08"
-    - "79ffea67b10d"
-    - "285e3b651bcc"
-    - "85782fce3ab8"
-    - "7deec127111e"
-    - "79df5a0f741b"
   instances_loop: 5
-  instances_parallel: 1
+  instances_parallel: 8
