@@ -1,11 +1,13 @@
 import subprocess
 import shutil
 import uuid
+import shlex
 
 from pathlib import Path
 from abc import ABC, abstractmethod
 from typing import Optional
 from Log.LogInterface import LogInterface
+
 
 class BaseBenchmarkHandler(ABC):
     """
@@ -34,12 +36,13 @@ class BaseBenchmarkHandler(ABC):
         """
         pass
 
-    def prepare_environment(self):
+    def prepare_environment(self, config_params: dict = None) -> bool:
         """
         Prepare the working environment.
         """
         self.logger.info("Preparing environment")
         self.working_dir.mkdir(parents=True, exist_ok=True)
+        return True
 
     def cleanup_environment(self):
         """
@@ -69,12 +72,13 @@ class BaseBenchmarkHandler(ABC):
         Run the benchmark instance non-blocking.
         """
         self.logger.info(f"Running instance with command: {self.commandLine}")
+
         try:
             process = subprocess.Popen(
-                self.commandLine.split(),
+                shlex.split(self.commandLine),
                 cwd=self.working_dir,
                 stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
+                stderr=subprocess.DEVNULL,
             )
             return process
         except Exception as e:

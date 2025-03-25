@@ -21,4 +21,4 @@ else
    python3 client.py
 fi
 
-deactivate
+

@@ -6,6 +6,7 @@ import socket
 from Log.LogInterface import LogInterface
 from Benchmarks.BaseBenchmarkInterface import BaseBenchmarkInterface
 
+
 class BenchmarkWebSocketClient:
     def __init__(self, uri, api_key, verbose=False):
         self.uri = uri
@@ -24,7 +25,9 @@ class BenchmarkWebSocketClient:
             benchmark = data["benchmark"]
             command_line = data["command_line"]
             config_params = data["config_params"]
-            success = self.interface.start_benchmark(benchmark, task_id, command_line, **config_params)
+            success = self.interface.start_benchmark(
+                benchmark, task_id, command_line, config_params
+            )
             return json.dumps(success)
         elif data["message"] == "get_benchmark_status":
             self.logger.info(f"Getting benchmark status of task: {data['task_id']}")
@@ -43,30 +46,29 @@ class BenchmarkWebSocketClient:
             return json.dumps(success)
         else:
             return json.dumps("Invalid message")
-        
+
     async def register(self):
         """Register the client with the server
         The client sends a json message:
         {
             "message": "connect",
-            "api_key": "12345678",  
+            "api_key": "12345678",
             "hostname": "client_hostname",
             "ip": "127.0.0.1"
         }
         """
         hostname = socket.gethostname()
         ip_address = socket.gethostbyname(hostname)
-        
+
         message = {
             "message": "connect",
             "api_key": self.api_key,
             "hostname": hostname,
-            "ip": ip_address
+            "ip": ip_address,
         }
-        
+
         await self.websocket.send(json.dumps(message))
         self.logger.info(f"Registered with server: {message}")
-        
 
     async def connect(self):
         """Establish and maintain a connection to the server with reconnection."""
@@ -91,4 +93,3 @@ class BenchmarkWebSocketClient:
                 self.logger.error(f"Connection failed: {str(e)}")
                 self.logger.info("Attempting to reconnect in 5 seconds...")
                 await asyncio.sleep(5)
-

@@ -1,44 +1,34 @@
 import asyncio
-import websockets
-import threading
-
+from WebClient.WebClientHandler import WebSocketServer
+from Benchmark.BenchmarkHandler import BenchmarkHandler
 from Log.LogInterface import LogInterface
-from WebClients.WebClientHandler import WebClientHandler
-from Menu.SimpleMenu import SimpleMenu
 
-class WebSocketServer:
-    def __init__(self, host="0.0.0.0", port=8765):
-        self.host = host
-        self.port = port
-        self.logger = LogInterface(log_verbose=True)
-        self.client_handler = WebClientHandler(api_key="12345678", logger=self.logger)
-        self.shutdown_event = asyncio.Event()
 
-    async def start(self):
-        loop = asyncio.get_running_loop()
+async def main():
 
-        # Start the menu in a separate thread
-        menu = SimpleMenu(self.client_handler, self.logger, loop, self.shutdown_event)
-        menu_thread = threading.Thread(target=menu.run_menu, daemon=True)
-        menu_thread.start()
+    logger = LogInterface()
 
-        # Start websocket server
-        server = await websockets.serve(self.handle_connection, self.host, self.port)
-        self.logger.info(f"Server started at {self.host}:{self.port}")
-        
-        await self.shutdown_event.wait()
-        self.logger.info("Shutdown signal received. Stopping server...")
-        server.close()
-        await server.wait_closed()
+    ws_server = WebSocketServer(api_key="12345678", logger=logger)
 
-    async def handle_connection(self, websocket):
-        await self.client_handler.add_client(websocket)
+    server_task = asyncio.create_task(ws_server.start())
 
-    @staticmethod
-    def run():
-        server = WebSocketServer()
-        asyncio.run(server.start())
+    await asyncio.sleep(5)
+
+    connected_clients = ws_server.client_handler.get_clients()
+    logger.info(f"Connected clients: {connected_clients}")
+
+    benchmark_handler = BenchmarkHandler(
+        connected_clients, "config.yaml", logger=logger
+    )
+
+    await benchmark_handler.run_benchmarks()
+
+    server_task.cancel()
+    try:
+        await server_task
+    except asyncio.CancelledError:
+        pass
 
 
 if __name__ == "__main__":
-    WebSocketServer.run()
+    asyncio.run(main())

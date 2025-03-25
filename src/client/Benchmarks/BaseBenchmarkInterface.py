@@ -1,37 +1,35 @@
 import time
 
-from typing import Dict, Optional, Type, Any
-from Log.LogInterface import LogInterface 
+from typing import Dict, Optional, Any
+from Log.LogInterface import LogInterface
 from Benchmarks.BaseBenchmarkHandler import BaseBenchmarkHandler
 from Benchmarks.HPL.HPLHandler import HPLHandler
 from Benchmarks.Collectl.CollectlHandler import CollectlHandler
 from Benchmarks.NETPipe.NETPipeHandler import NETPipeHandler
-from Database.DatabaseInterface import DatabaseInterface
+
 
 class BaseBenchmarkInterface:
     def __init__(self, logger: LogInterface):
         self.logger = logger
         self.active_benchmarks: Dict[str, tuple[BaseBenchmarkHandler, Any]] = {}
-        self.database = DatabaseInterface(logger=self.logger)
         self.benchmark_handlers = {
-            'hpl': HPLHandler,
-            'collectl': CollectlHandler,
-            'netpipe': NETPipeHandler
+            "hpl": HPLHandler,
+            "collectl": CollectlHandler,
+            "netpipe": NETPipeHandler,
         }
 
-    def start_benchmark(self, 
-                       benchmark_type: str,
-                       task_id: str,
-                       command_line: str,
-                       **config_params) -> bool:
+    def start_benchmark(
+        self, benchmark_type: str, task_id: str, command_line: str, config_params: dict
+    ) -> bool:
         """
         Start a benchmark of the specified type with given parameters.
-        
+
         Args:
             benchmark_type: Type of benchmark to run ('hpl', 'collectl', 'netpipe')
             task_id: Unique identifier for this benchmark run
             command_line: Command line parameters for the benchmark
-            **config_params: Additional configuration parameters specific to the benchmark
+            config_params: Dictionary of configuration parameters specific to the benchmark,
+                           where each key is a parameter name and its value is the parameter value.
         """
         try:
             if benchmark_type not in self.benchmark_handlers:
@@ -41,11 +39,11 @@ class BaseBenchmarkInterface:
             handler_class = self.benchmark_handlers[benchmark_type]
             handler = handler_class(command_line, task_id, self.logger)
 
-            # Prepare environment with any config params
-            if benchmark_type == 'hpl':
-                handler.prepare_environment(**config_params)
-            else:
-                handler.prepare_environment()
+            if not handler.prepare_environment(config_params):
+                self.logger.error(
+                    f"Failed to prepare environment for benchmark {task_id}"
+                )
+                return False
 
             handler.prepare_command_line()
             process = handler.run()
@@ -70,7 +68,6 @@ class BaseBenchmarkInterface:
         try:
             handler.kill(process)
             files = handler.retrieve_data()
-            self.database.insert_files_for_id(task_id, files)
             handler.cleanup_environment()
             del self.active_benchmarks[task_id]
             self.logger.info(f"Stopped benchmark {task_id} from BaseInterface")
@@ -89,8 +86,8 @@ class BaseBenchmarkInterface:
 
         handler, process = self.active_benchmarks[task_id]
         if process.poll() is None:
-            return 'running'
-        return 'completed'
+            return "running"
+        return "completed"
 
     def get_benchmark_results(self, task_id: str) -> Optional[list]:
         """
@@ -100,14 +97,15 @@ class BaseBenchmarkInterface:
             return None
 
         handler, process = self.active_benchmarks[task_id]
-        if process.poll() is not None:  
+        if process.poll() is not None:
             files = handler.retrieve_data()
-            self.database.insert_files_for_id(task_id, files)
-            handler.cleanup_environment()
+            files_content = []
+            for file in files:
+                with open(file, "r") as f:
+                    files_content.append(f.read())
             del self.active_benchmarks[task_id]
-            results = self.database.get_files_by_id(task_id)
-            if results:
-                return results
+            if files:
+                return files_content
         return None
 
     def cleanup_all(self):
@@ -118,4 +116,3 @@ class BaseBenchmarkInterface:
             if not self.stop_benchmark(task_id):
                 self.logger.error(f"Failed to stop benchmark {task_id}")
             handler.cleanup_environment()
-            

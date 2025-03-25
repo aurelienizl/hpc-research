@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Union
 
+
 class HPLConfig:
     """
     Generates and writes an HPL benchmark configuration file.

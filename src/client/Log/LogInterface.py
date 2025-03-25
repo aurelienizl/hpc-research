@@ -2,10 +2,11 @@ import datetime
 
 from typing import Optional
 
+
 class LogInterface:
     """
     A Python interface for structured logging operations.
-    
+
     This class provides a standardized way to write logs in a format compatible
     with common log analysis tools. It supports multiple log levels and can
     output to both file and console.

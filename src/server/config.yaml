@@ -1,0 +1,54 @@
+#- id: 1
+#  runs: 4
+#  pre_processing_cmd: "sleep 1"
+#  post_processing_cmd: "sleep 1"
+#  benchmark_instance:
+#    - benchmark_id: "1"
+#      benchmark_type: hpl
+#      custom_params:
+#        p: 1
+#        q: 2
+#        nb: 192
+#        n: 10000
+#      openmpi_hosts:
+#        "127.0.0.1": 2
+#      openmpi_processes: 2
+#      target_nodes:
+#        - "hpc-research"
+#    - benchmark_id: "2"
+#      benchmark_type: hpl
+#      custom_params:
+#        p: 1
+#        q: 2
+#        nb: 192
+#        n: 10000
+#      openmpi_hosts:
+#        "127.0.0.1": 2
+#      openmpi_processes: 2
+#      target_nodes:
+#        - "hpc-research"
+
+
+- id: 1
+  runs: 4
+  pre_processing_cmd: "sleep 1"
+  post_processing_cmd: "sleep 1"
+  benchmark_instance:
+    - benchmark_id: "1"
+      benchmark_type: netpipe
+      custom_params:
+        {}
+      openmpi_hosts:
+        "127.0.0.1": 2
+      openmpi_processes: 2
+      target_nodes:
+        - "hpc-research"
+    - benchmark_id: "2"
+      benchmark_type: netpipe
+      custom_params:
+        {}
+      openmpi_hosts:
+        "127.0.0.1": 2
+      openmpi_processes: 2
+      target_nodes:
+        - "hpc-research"
