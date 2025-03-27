@@ -30,8 +30,8 @@
 
 
 - id: 1
-  runs: 1
-  pre_processing_cmd: "bash /root/script.sh 2 2048 9 && sleep 40"
+  runs: 5
+  pre_processing_cmd: "bash /root/script.sh 2 2048 9 && sleep 60"
   post_processing_cmd: "sleep 1"
   benchmark_instance:
     - benchmark_id: "1"
