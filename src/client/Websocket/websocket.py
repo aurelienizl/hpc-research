@@ -15,6 +15,16 @@ class BenchmarkWebSocketClient:
         self.websocket = None
         self.api_key = api_key
 
+    def get_local_ip(self):
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))  # Google's DNS
+            ip_address = s.getsockname()[0]
+            s.close()
+            return ip_address
+        except Exception as e:
+            return f"Error: {e}"
+
     async def handle_message(self, message):
         """Handle incoming messages from the server."""
         data = json.loads(message)
@@ -58,7 +68,7 @@ class BenchmarkWebSocketClient:
         }
         """
         hostname = socket.gethostname()
-        ip_address = socket.gethostbyname(hostname)
+        ip_address = str(self.get_local_ip())
 
         message = {
             "message": "connect",
