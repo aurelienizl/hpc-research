@@ -235,7 +235,7 @@
 #        - "2"
 - id: 4
   runs: 5
-  pre_processing_cmd: "bash /root/script.sh 8 8192 3 && sleep 60"
+  pre_processing_cmd: "bash /root/script.sh 16 16384 1 && sleep 60"
   post_processing_cmd: "sleep 1"
   benchmark_instance:
     - benchmark_id: "1"
