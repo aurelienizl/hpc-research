@@ -30,14 +30,22 @@ class BenchmarkHandler:
         for cluster_benchmark in self.cluster_instances.cluster_benchmarks:
             await self.__run_cluster_benchmark(cluster_benchmark)
 
-    def __exec_cmd(self, cmd: str) -> bool:
+    async def __exec_cmd(self, cmd: str) -> bool:
         try:
-            print(f"Running command: {cmd}")
-            subprocess.run(cmd, shell=True, check=True)
+            self.logger.info(f"Running command: {cmd}")
+            process = await asyncio.create_subprocess_shell(
+                cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, stderr = await process.communicate()
+            if process.returncode != 0:
+                self.logger.error(f"Error running command: {cmd}")
+                self.logger.error(stderr.decode())
+                return False
             return True
-        except subprocess.CalledProcessError as e:
-            print(f"Error running command: {cmd}")
-            print(e)
+        except Exception as e:
+            self.logger.error(f"Exception while running command: {cmd} - {e}")
             return False
 
     async def __run_cluster_benchmark(self, cluster_benchmark: ClusterInstance):
@@ -46,7 +54,7 @@ class BenchmarkHandler:
             self.logger.info(
                 f"Running pre-processing command: {cluster_benchmark.pre_processing_cmd}"
             )
-            if not self.__exec_cmd(cluster_benchmark.pre_processing_cmd):
+            if not await self.__exec_cmd(cluster_benchmark.pre_processing_cmd):
                 return
         tasks_info: List[Tuple[str, WebClient]] = []
         for benchmark_instance in cluster_benchmark.benchmark_instances:
@@ -74,7 +82,7 @@ class BenchmarkHandler:
             self.logger.info(
                 f"Running post-processing command: {cluster_benchmark.post_processing_cmd}"
             )
-            if not self.__exec_cmd(cluster_benchmark.post_processing_cmd):
+            if not await self.__exec_cmd(cluster_benchmark.post_processing_cmd):
                 return
 
     async def __run_benchmark(
