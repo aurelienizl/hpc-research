@@ -28,7 +28,9 @@ class BenchmarkHandler:
     async def run_benchmarks(self):
         self.load_benchmarks()
         for cluster_benchmark in self.cluster_instances.cluster_benchmarks:
-            await self.__run_cluster_benchmark(cluster_benchmark)
+            for _ in range
+            (cluster_benchmark.runs):
+                await self.__run_cluster_benchmark(cluster_benchmark)
 
     async def __exec_cmd(self, cmd: str) -> bool:
         try:
