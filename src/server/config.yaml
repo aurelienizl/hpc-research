@@ -30,25 +30,64 @@
 
 
 - id: 1
-  runs: 4
-  pre_processing_cmd: "sleep 1"
+  runs: 1
+  pre_processing_cmd: "bash /root/script.sh 2 2048 9 && sleep 30"
   post_processing_cmd: "sleep 1"
   benchmark_instance:
     - benchmark_id: "1"
       benchmark_type: netpipe
-      custom_params:
-        {}
+      custom_params: {}
       openmpi_hosts:
         "127.0.0.1": 2
       openmpi_processes: 2
       target_nodes:
-        - "hpc-research"
+        - "85782fce3ab8"
     - benchmark_id: "2"
       benchmark_type: netpipe
-      custom_params:
-        {}
+      custom_params: {}
       openmpi_hosts:
         "127.0.0.1": 2
       openmpi_processes: 2
       target_nodes:
-        - "hpc-research"
+        - "5e03942799b4"
+    - benchmark_id: "3"
+      benchmark_type: netpipe
+      custom_params: {}
+      openmpi_hosts:
+        "127.0.0.1": 2
+      openmpi_processes: 2
+      target_nodes:
+        - "79ffea67b10d"
+    - benchmark_id: "4"
+      benchmark_type: netpipe
+      custom_params: {}
+      openmpi_hosts:
+        "127.0.0.1": 2
+      openmpi_processes: 2
+      target_nodes:
+        - "9f081b331d08"
+    - benchmark_id: "5"
+      benchmark_type: netpipe
+      custom_params: {}
+      openmpi_hosts:
+        "127.0.0.1": 2
+      openmpi_processes: 2
+      target_nodes:
+        - "79df5a0f741b"
+    - benchmark_id: "6"
+      benchmark_type: netpipe
+      custom_params: {}
+      openmpi_hosts:
+        "127.0.0.1": 2
+      openmpi_processes: 2
+      target_nodes:
+        - "7deec127111e"
+    - benchmark_id: "7"
+      benchmark_type: netpipe
+      custom_params: {}
+      openmpi_hosts:
+        "127.0.0.1": 2
+      openmpi_processes: 2
+      target_nodes:
+        - "156cf788e220"
+

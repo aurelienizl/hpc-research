@@ -68,6 +68,7 @@ class BenchmarkWebSocketClient:
         }
 
         await self.websocket.send(json.dumps(message))
+        print(f"Registered with server: {message}")
         self.logger.info(f"Registered with server: {message}")
 
     async def connect(self):
