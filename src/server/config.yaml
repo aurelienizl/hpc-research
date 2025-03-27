@@ -90,4 +90,12 @@
       openmpi_processes: 2
       target_nodes:
         - "156cf788e220"
+    - benchmark_id: "8"
+      benchmark_type: netpipe
+      custom_params: {}
+      openmpi_hosts:
+        "127.0.0.1": 2
+      openmpi_processes: 2
+      target_nodes:
+        - "285e3b651bcc"
 
