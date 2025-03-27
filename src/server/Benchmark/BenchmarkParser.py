@@ -24,7 +24,7 @@ class BenchmarkInstance:
             for ip, processes in self.openmpi_hosts.items():
                 command_line += f" --host {ip}:{processes}"
         if self.openmpi_np:
-            command_line += f" -np {self.openmpi_np} --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+            command_line += f' -np {self.openmpi_np} --bind-to none --mca plm_rsh_agent "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"'
         return command_line
 
     def __repr__(self):
