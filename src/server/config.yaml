@@ -1,7 +1,86 @@
 
+#- id: 1
+#  runs: 5
+#  pre_processing_cmd: "bash /root/script.sh 2 2048 9 && sleep 60"
+#  post_processing_cmd: "sleep 1"
+#  benchmark_instance:
+#    - benchmark_id: "1"
+#      benchmark_type: netpipe
+#      custom_params: {}
+#      openmpi_hosts:
+#        "127.0.0.1": 1
+#        "192.168.1.53": 1
+#      openmpi_processes: 2
+#      target_nodes:
+#        - "1"
+#    - benchmark_id: "2"
+#      benchmark_type: netpipe
+#      custom_params: {}
+#      openmpi_hosts:
+#        "127.0.0.1": 1
+#        "192.168.1.54": 1
+#      openmpi_processes: 2
+#      target_nodes:
+#        - "2"
+#    - benchmark_id: "3"
+#      benchmark_type: netpipe
+#      custom_params: {}
+#      openmpi_hosts:
+#        "127.0.0.1": 1
+#        "192.168.1.56": 1
+#      openmpi_processes: 2
+#      target_nodes:
+#        - "3"
+#    - benchmark_id: "4"
+#      benchmark_type: netpipe
+#      custom_params: {}
+#      openmpi_hosts:
+#        "127.0.0.1": 1
+#        "192.168.1.55": 1
+#      openmpi_processes: 2
+#      target_nodes:
+#        - "4"
+#    - benchmark_id: "5"
+#      benchmark_type: netpipe
+#      custom_params: {}
+#      openmpi_hosts:
+#        "127.0.0.1": 1
+#        "192.168.1.57": 1
+#      openmpi_processes: 2
+#      target_nodes:
+#        - "5"
+#    - benchmark_id: "6"
+#      benchmark_type: netpipe
+#      custom_params: {}
+#      openmpi_hosts:
+#        "127.0.0.1": 1
+#        "192.168.1.59" : 1
+#      openmpi_processes: 2
+#      target_nodes:
+#        - "6"
+#    - benchmark_id: "7"
+#      benchmark_type: netpipe
+#      custom_params: {}
+#      openmpi_hosts:
+#        "127.0.0.1": 1
+#        "192.168.1.60": 1
+#      openmpi_processes: 2
+#      target_nodes:
+#        - "7"
+#    - benchmark_id: "8"
+#      benchmark_type: netpipe
+#      custom_params: {}
+#      openmpi_hosts:
+#        "127.0.0.1": 1
+#        "192.168.1.52": 1
+#      openmpi_processes: 2
+#      target_nodes:
+#        - "8"
+#
+#
 - id: 1
   runs: 5
-  pre_processing_cmd: "bash /root/script.sh 2 2048 9 && sleep 60"
+  pre_processing_cmd: "bash /root/script.sh 4 4096 5 && sleep 60"
   post_processing_cmd: "sleep 1"
   benchmark_instance:
     - benchmark_id: "1"
@@ -18,11 +97,29 @@
       custom_params: {}
       openmpi_hosts:
         "127.0.0.1": 1
+        "192.168.1.53": 1
+      openmpi_processes: 2
+      target_nodes:
+        - "1"
+    - benchmark_id: "3"
+      benchmark_type: netpipe
+      custom_params: {}
+      openmpi_hosts:
+        "127.0.0.1": 1
         "192.168.1.54": 1
       openmpi_processes: 2
       target_nodes:
         - "2"
-    - benchmark_id: "3"
+    - benchmark_id: "4"
+      benchmark_type: netpipe
+      custom_params: {}
+      openmpi_hosts:
+        "127.0.0.1": 1
+        "192.168.1.54": 1
+      openmpi_processes: 2
+      target_nodes:
+        - "2"
+    - benchmark_id: "5"
       benchmark_type: netpipe
       custom_params: {}
       openmpi_hosts:
@@ -31,42 +128,24 @@
       openmpi_processes: 2
       target_nodes:
         - "3"
-    - benchmark_id: "4"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.55": 1
-      openmpi_processes: 2
-      target_nodes:
-        - "4"
-    - benchmark_id: "5"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.57": 1
-      openmpi_processes: 2
-      target_nodes:
-        - "5"
     - benchmark_id: "6"
       benchmark_type: netpipe
       custom_params: {}
       openmpi_hosts:
         "127.0.0.1": 1
-        "192.168.1.59" : 1
+        "192.168.1.56" : 1
       openmpi_processes: 2
       target_nodes:
-        - "6"
+        - "3"
     - benchmark_id: "7"
       benchmark_type: netpipe
       custom_params: {}
       openmpi_hosts:
         "127.0.0.1": 1
-        "192.168.1.60": 1
+        "192.168.1.52": 1
       openmpi_processes: 2
       target_nodes:
-        - "7"
+        - "4"
     - benchmark_id: "8"
       benchmark_type: netpipe
       custom_params: {}
@@ -75,4 +154,4 @@
         "192.168.1.52": 1
       openmpi_processes: 2
       target_nodes:
-        - "8"
+        - "4"
