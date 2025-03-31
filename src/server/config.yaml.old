@@ -1,0 +1,56 @@
+cluster_instances:
+  - id: 1
+    pre_process_cmd: "/usr/local/bin/pre_script.sh"
+    post_process_cmd: "/usr/local/bin/post_script.sh"
+    hosts:
+      - "192.168.0.1"
+      - "192.168.0.2"
+      - "192.168.0.3"
+    benchmark:
+      - id: 101
+        type: "netpipe"
+        pre_cmd_exec: "/usr/local/bin/target_pre.sh"   # Optional
+        post_cmd_exec: "/usr/local/bin/target_post.sh" # Optional
+        mpi_processes: 3
+        mpi_hosts:
+          - "192.168.0.1:1"
+          - "192.168.0.2:2"
+        mpi_args: "--verbose"
+        target_nodes:
+          - "192.168.0.3"
+        instances: 5
+      - id: 102
+        type: "custom"
+        pre_cmd_exec: "/usr/local/bin/target_pre_custom.sh"   # Optional
+        post_cmd_exec: "/usr/local/bin/target_post_custom.sh" # Optional
+        command_line: "sysbench cpu run"
+        target_nodes:
+          - "192.168.0.3"
+        instances: 5
+
+  - id: 2
+    pre_process_cmd: "/usr/local/bin/pre_script.sh"
+    post_process_cmd: "/usr/local/bin/post_script.sh"
+    hosts:
+      - "192.168.0.1"
+      - "192.168.0.2"
+      - "192.168.0.3"
+    benchmark:
+      - id: 101
+        type: "netpipe"
+        mpi_processes: 4
+        mpi_hosts:
+          - "192.168.0.1:2"
+          - "192.168.0.2:2"
+        mpi_args: "--verbose"
+        target_nodes:
+          - "192.168.0.3"
+      - id: 102
+        type: "hpl"
+        mpi_processes: 8
+        mpi_hosts:
+          - "192.168.0.1:2"
+          - "192.168.0.3:6"
+        mpi_args: "--optimize"
+        target_nodes:
+          - "192.168.0.2"

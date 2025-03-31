@@ -1,235 +1,50 @@
+cluster_instances:
+  - id: 1
+    pre_process_cmd: "wget google.com"
+    post_process_cmd: "wget google.com"
+    hosts:
+      - "127.0.0.1"
+    benchmark:
+      - id: 101
+        type: "NPmpi"
+        pre_cmd_exec: "echo hello_world_pre >> pre_cmd_exec"   # Optional
+        post_cmd_exec: "echo hello_world_post >> post_cmd_exec" # Optional
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:2"
+        mpi_args: "--bind-to none"
+        target_nodes:
+          - "127.0.0.1"
+        instances: 2
+      - id: 102
+        type: "custom"
+        pre_cmd_exec: "echo hello_world_pre_custom >> pre_cmd_exec"   # Optional
+        post_cmd_exec: "echo hello_world_post_custom >> post_cmd_exec" # Optional
+        command_line: "sysbench cpu run"
+        target_nodes:
+          - "127.0.0.1"
+        instances: 5
 
-- id: 1
-  runs: 5
-  pre_processing_cmd: "bash /root/script.sh 2 2048 9 && sleep 60"
-  post_processing_cmd: "sleep 1"
-  benchmark_instance:
-    - benchmark_id: "1"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.53": 1
-      openmpi_processes: 2
-      target_nodes:
-        - "1"
-    - benchmark_id: "2"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.54": 1
-      openmpi_processes: 2
-      target_nodes:
-        - "2"
-    - benchmark_id: "3"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.56": 1
-      openmpi_processes: 2
-      target_nodes:
-        - "3"
-    - benchmark_id: "4"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.55": 1
-      openmpi_processes: 2
-      target_nodes:
-        - "4"
-    - benchmark_id: "5"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.57": 1
-      openmpi_processes: 2
-      target_nodes:
-        - "5"
-    - benchmark_id: "6"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.59" : 1
-      openmpi_processes: 2
-      target_nodes:
-        - "6"
-    - benchmark_id: "7"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.60": 1
-      openmpi_processes: 2
-      target_nodes:
-        - "7"
-    - benchmark_id: "8"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.52": 1
-      openmpi_processes: 2
-      target_nodes:
-        - "8"
-
-
-- id: 2
-  runs: 5
-  pre_processing_cmd: "bash /root/script.sh 4 4096 5 && sleep 60"
-  post_processing_cmd: "sleep 1"
-  benchmark_instance:
-    - benchmark_id: "1"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.53": 1
-      openmpi_processes: 2
-      target_nodes:
-        - "1"
-    - benchmark_id: "2"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.53": 1
-      openmpi_processes: 2
-      target_nodes:
-        - "1"
-    - benchmark_id: "3"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.54": 1
-      openmpi_processes: 2
-      target_nodes:
-        - "2"
-    - benchmark_id: "4"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.54": 1
-      openmpi_processes: 2
-      target_nodes:
-        - "2"
-    - benchmark_id: "5"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.56": 1
-      openmpi_processes: 2
-      target_nodes:
-        - "3"
-    - benchmark_id: "6"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.56" : 1
-      openmpi_processes: 2
-      target_nodes:
-        - "3"
-    - benchmark_id: "7"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.52": 1
-      openmpi_processes: 2
-      target_nodes:
-        - "4"
-    - benchmark_id: "8"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.52": 1
-      openmpi_processes: 2
-      target_nodes:
-        - "4"
-
-- id: 3
-  runs: 5
-  pre_processing_cmd: "bash /root/script.sh 8 8192 3 && sleep 60"
-  post_processing_cmd: "sleep 1"
-  benchmark_instance:
-    - benchmark_id: "1"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.53": 1
-      openmpi_processes: 2
-      target_nodes:
-        - "1"
-    - benchmark_id: "2"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.53": 1
-      openmpi_processes: 2
-      target_nodes:
-        - "1"
-    - benchmark_id: "3"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.53": 1
-      openmpi_processes: 2
-      target_nodes:
-        - "1"
-    - benchmark_id: "4"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.53": 1
-      openmpi_processes: 2
-      target_nodes:
-        - "1"
-    - benchmark_id: "5"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.52": 1
-      openmpi_processes: 2
-      target_nodes:
-        - "2"
-    - benchmark_id: "6"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.52" : 1
-      openmpi_processes: 2
-      target_nodes:
-        - "2"
-    - benchmark_id: "7"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.52": 1
-      openmpi_processes: 2
-      target_nodes:
-        - "2"
-    - benchmark_id: "8"
-      benchmark_type: netpipe
-      custom_params: {}
-      openmpi_hosts:
-        "127.0.0.1": 1
-        "192.168.1.52": 1
-      openmpi_processes: 2
-      target_nodes:
-        - "2"
+  - id: 2
+    hosts:
+      - "127.0.0.1"
+    pre_process_cmd: "echo hello_world_pre >> pre_process_cmd"
+    post_process_cmd: "echo hello_world_post >> post_process_cmd"
+    benchmark:
+      - id: 101
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:2"
+        mpi_args: "--allow-run-as-root"
+        target_nodes:
+          - "127.0.0.1"
+      - id: 102
+        type: "xhpl"
+        pre_cmd_exec: "curl https://pastebin.com/raw/cxK2CfcJ -o HPL.dat"   # Optional
+        mpi_processes: 1
+        mpi_hosts:
+          - "127.0.0.1:1"
+        mpi_args: ""
+        target_nodes:
+          - "127.0.0.1"
