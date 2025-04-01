@@ -13,6 +13,7 @@ cluster_instances:
       - "192.168.1.35"
       - "192.168.1.36"
       - "192.168.1.37"
+      - "127.0.0.1"
     benchmark:
       - id: 100
         type: "NPmpi"
@@ -94,10 +95,7 @@ cluster_instances:
         target_nodes:
           - "192.168.1.37"
         instances: 1
-
-
-
-
+  
   - id: 2
     pre_process_cmd: "bash /script.sh 4 4096 4"
     post_process_cmd: ""
@@ -106,6 +104,7 @@ cluster_instances:
       - "192.168.1.31"
       - "192.168.1.32"
       - "192.168.1.33"
+      - "127.0.0.1"
     benchmark:
       - id: 100
         type: "NPmpi"
@@ -154,6 +153,7 @@ cluster_instances:
     hosts:
       - "192.168.1.30"
       - "192.168.1.31"
+      - "127.0.0.1"
     benchmark:
       - id: 100
         type: "NPmpi"
@@ -181,6 +181,7 @@ cluster_instances:
     post_process_cmd: ""
     hosts:
       - "192.168.1.30"
+      - "127.0.0.1"
     benchmark:
       - id: 100
         type: "NPmpi"
