@@ -18,6 +18,9 @@ find . -type f -name "*.db" -exec rm -f {} +
 # Find and remove all .txt files
 find . -type f -name "log.txt" -exec rm -f {} +
 
+# Find and remove all .xml files
+find . -type f -name "*.xml" -exec rm -f {} +
+
 # Find and remove all HPLConfigurations directories
 find . -type d -name "results" -exec rm -r {} +
 

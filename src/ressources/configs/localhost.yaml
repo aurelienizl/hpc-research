@@ -1,0 +1,17 @@
+cluster_instances:
+  - id: 1
+    run_count: 2
+    pre_process_cmd: "bash /script.sh 1 2048 1"
+    post_process_cmd: ""
+    hosts:
+      - "127.0.0.1"
+    benchmark:
+      - id: 100
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:2"
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "127.0.0.1"
+        instances: 1

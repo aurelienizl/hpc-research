@@ -4,3 +4,4 @@ psutil==5.9.8
 websockets==15.0.1
 PyYAML==6.0.2
 black==25.1.0
+flask==3.0.2

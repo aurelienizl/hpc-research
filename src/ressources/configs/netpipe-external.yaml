@@ -2,7 +2,7 @@
 
 cluster_instances:
   - id: 1
-    pre_process_cmd: "bash /script.sh 2 2048 8"
+    pre_process_cmd: "bash /script.sh 1 2048 8"
     post_process_cmd: ""
     hosts:
       - "192.168.1.30"
@@ -22,7 +22,7 @@ cluster_instances:
         mpi_hosts:
           - "127.0.0.1:1"
           - "192.168.1.251:1"
-        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
         target_nodes:
           - "192.168.1.30"
         instances: 1
@@ -32,7 +32,7 @@ cluster_instances:
         mpi_hosts:
           - "127.0.0.1:1"
           - "192.168.1.251:1"
-        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
         target_nodes:
           - "192.168.1.31"
         instances: 1
@@ -42,7 +42,7 @@ cluster_instances:
         mpi_hosts:
           - "127.0.0.1:1"
           - "192.168.1.251:1"
-        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
         target_nodes:
           - "192.168.1.32"
         instances: 1
@@ -52,7 +52,7 @@ cluster_instances:
         mpi_hosts:
           - "127.0.0.1:1"
           - "192.168.1.251:1"
-        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
         target_nodes:
           - "192.168.1.33"
         instances: 1
@@ -62,7 +62,7 @@ cluster_instances:
         mpi_hosts:
           - "127.0.0.1:1"
           - "192.168.1.251:1"
-        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
         target_nodes:
           - "192.168.1.34"
         instances: 1
@@ -72,7 +72,7 @@ cluster_instances:
         mpi_hosts:
           - "127.0.0.1:1"
           - "192.168.1.251:1"
-        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
         target_nodes:
           - "192.168.1.35"
         instances: 1
@@ -82,7 +82,7 @@ cluster_instances:
         mpi_hosts:
           - "127.0.0.1:1"
           - "192.168.1.251:1"
-        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
         target_nodes:
           - "192.168.1.36"
         instances: 1
@@ -92,13 +92,13 @@ cluster_instances:
         mpi_hosts:
           - "127.0.0.1:1"
           - "192.168.1.251:1"
-        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
         target_nodes:
           - "192.168.1.37"
         instances: 1
 
   - id: 2
-    pre_process_cmd: "bash /script.sh 4 4096 4"
+    pre_process_cmd: "bash /script.sh 2 4096 4"
     post_process_cmd: ""
     hosts:
       - "192.168.1.30"
@@ -114,7 +114,7 @@ cluster_instances:
         mpi_hosts:
           - "127.0.0.1:1"
           - "192.168.1.251:1"
-        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
         target_nodes:
           - "192.168.1.30"
         instances: 2
@@ -124,7 +124,7 @@ cluster_instances:
         mpi_hosts:
           - "127.0.0.1:1"
           - "192.168.1.251:1"
-        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
         target_nodes:
           - "192.168.1.31"
         instances: 2
@@ -134,7 +134,7 @@ cluster_instances:
         mpi_hosts:
           - "127.0.0.1:1"
           - "192.168.1.251:1"
-        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
         target_nodes:
           - "192.168.1.32"
         instances: 2
@@ -144,13 +144,13 @@ cluster_instances:
         mpi_hosts:
           - "127.0.0.1:1"
           - "192.168.1.251:1"
-        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
         target_nodes:
           - "192.168.1.33"
         instances: 2
   
   - id: 3
-    pre_process_cmd: "bash /script.sh 8 8192 2"
+    pre_process_cmd: "bash /script.sh 4 8192 2"
     post_process_cmd: ""
     hosts:
       - "192.168.1.30"
@@ -164,7 +164,7 @@ cluster_instances:
         mpi_hosts:
           - "127.0.0.1:1"
           - "192.168.1.251:1"
-        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
         target_nodes:
           - "192.168.1.30"
         instances: 4
@@ -174,13 +174,13 @@ cluster_instances:
         mpi_hosts:
           - "127.0.0.1:1"
           - "192.168.1.251:1"
-        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
         target_nodes:
           - "192.168.1.31"
         instances: 4
 
   - id: 4
-    pre_process_cmd: "bash /script.sh 16 16384 1"
+    pre_process_cmd: "bash /script.sh 8 16384 1"
     post_process_cmd: ""
     hosts:
       - "192.168.1.30"
@@ -193,7 +193,7 @@ cluster_instances:
         mpi_hosts:
           - "127.0.0.1:1"
           - "192.168.1.251:1"
-        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
         target_nodes:
           - "192.168.1.30"
         instances: 8      

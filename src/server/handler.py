@@ -4,6 +4,7 @@ import os
 import time
 import threading
 import argparse
+import subprocess
 
 from config_handler import load_cluster_instances
 from cmd_builder import CmdBuilder
@@ -11,6 +12,34 @@ from benchmark_api import BenchmarkAPI
 
 # Reuse the secret key as defined on the client.
 SECRET_KEY = "mySecret123"
+
+
+def start_collectl(collectl_id: str, output_file: str):
+    """
+    Starts collectl with default parameters.
+    The output is written to 'output_file'. Returns the process handle and the log file descriptor.
+    """
+    log_fd = open(output_file, "w")
+    proc = subprocess.Popen(
+        ["collectl", "-oT", "-scCdmn", "--export", "lexpr"],
+        stdout=log_fd,
+        stderr=subprocess.STDOUT,
+    )
+    print(
+        f"Collectl started with ID {collectl_id} (PID {proc.pid}). Output: {output_file}"
+    )
+    return proc, log_fd
+
+
+def stop_collectl(proc, log_fd, collectl_id: str):
+    """
+    Stops the running collectl process.
+    """
+    proc.terminate()  # Send SIGTERM to collectl.
+    proc.wait()  # Wait for process termination.
+    log_fd.close()  # Close the file descriptor.
+    print(f"Collectl with ID {collectl_id} stopped.")
+
 
 def save_results(output_dir, benchmark_id, results):
     """
@@ -20,7 +49,7 @@ def save_results(output_dir, benchmark_id, results):
     """
     bench_out_dir = os.path.join(output_dir, benchmark_id)
     os.makedirs(bench_out_dir, exist_ok=True)
-    
+
     for file_entry in results.get("results", []):
         fname = file_entry["filename"]
         content = file_entry["content"]
@@ -37,6 +66,7 @@ def save_results(output_dir, benchmark_id, results):
             f.write(content)
     print(f"Results saved in {bench_out_dir}")
 
+
 def process_benchmark(benchmark, cluster_dir):
     """
     Worker function that:
@@ -50,23 +80,25 @@ def process_benchmark(benchmark, cluster_dir):
     target_node = benchmark.target_nodes[0]
     client_url = f"http://{target_node}:5000"
     api = BenchmarkAPI(client_url, SECRET_KEY)
-    
+
     # Build command lines.
     builder = CmdBuilder(benchmark)
     cmds = builder.build()
     pre_cmd = cmds.get("pre_cmd", "")
     main_cmd = cmds.get("command_line", "")
     post_cmd = cmds.get("post_cmd", "")
-    
+
     print(f"[{benchmark.id}] Launching on {client_url}")
-    launch_resp = api.launch_benchmark(main_cmd, pre_cmd_exec=pre_cmd, post_cmd_exec=post_cmd)
+    launch_resp = api.launch_benchmark(
+        main_cmd, pre_cmd_exec=pre_cmd, post_cmd_exec=post_cmd
+    )
     if launch_resp.get("status") != "accepted":
         print(f"[{benchmark.id}] Error launching: {launch_resp.get('message')}")
         return
 
     task_id = launch_resp.get("task_id")
     print(f"[{benchmark.id}] Launched with task_id: {task_id}")
-    
+
     time.sleep(10)  # Give some time for the task to start.
     # Poll the benchmark status until it is finished or encounters an error.
     while True:
@@ -76,9 +108,11 @@ def process_benchmark(benchmark, cluster_dir):
         if status in ["finished", "error"]:
             break
         time.sleep(10)  # Poll every 10 seconds.
-    
+
     if status == "error":
-        print(f"[{benchmark.id}] Benchmark failed with error: {status_resp.get('message')}")
+        print(
+            f"[{benchmark.id}] Benchmark failed with error: {status_resp.get('message')}"
+        )
         return
 
     # Retrieve results.
@@ -88,58 +122,112 @@ def process_benchmark(benchmark, cluster_dir):
         return
     save_results(cluster_dir, benchmark.id, results)
 
+
 class BenchmarkHandler:
     """
     Processes ClusterInstances sequentially. Within each cluster, all BenchmarkInstances
     are launched simultaneously and processed in parallel.
     """
+
     def __init__(self, config_file: str, output_folder: str):
         self.config_file = config_file
         self.output_folder = output_folder
         self.clusters = load_cluster_instances(config_file)
-    
-    def process_cluster(self, cluster):
+
+    def process_cluster(self, cluster, run):
         """
         Processes all BenchmarkInstances for a single ClusterInstance concurrently.
         """
-        cluster_dir = os.path.join(self.output_folder, f"cluster_{cluster.id}")
+        # If run_count > 1, append the run suffix.
+        if cluster.run_count > 1:
+            cluster_dir = os.path.join(
+                self.output_folder, f"cluster_{cluster.id}_{run}"
+            )
+        else:
+            cluster_dir = os.path.join(self.output_folder, f"cluster_{cluster.id}")
         os.makedirs(cluster_dir, exist_ok=True)
-        print(f"\nProcessing Cluster {cluster.id} ...")
-        
+        print(f"\nProcessing Cluster {cluster.id} run {run} ...")
+
+        # Execute pre_process_cmd (if defined) before launching benchmarks.
+        if cluster.pre_process_cmd:
+            print(
+                f"[Cluster {cluster.id}] Executing pre_process_cmd: {cluster.pre_process_cmd}"
+            )
+            pre_result = subprocess.run(cluster.pre_process_cmd, shell=True)
+            if pre_result.returncode != 0:
+                print(
+                    f"[Cluster {cluster.id}] Pre-process command failed with return code {pre_result.returncode}"
+                )
+                Exception(
+                    f"Pre-process command failed with return code {pre_result.returncode}"
+                )
+
+        # Start collectl monitoring for this cluster run.
+        collectl_id = f"cluster_{cluster.id}_run{run}"
+        collectl_log = os.path.join(cluster_dir, "collectl.log")
+        collectl_proc, log_fd = start_collectl(collectl_id, collectl_log)
+
         threads = []
-        # Create all threads for benchmarks first.
+        # Create threads for each benchmark.
         for benchmark in cluster.benchmarks:
-            t = threading.Thread(target=process_benchmark, args=(benchmark, cluster_dir))
+            t = threading.Thread(
+                target=process_benchmark, args=(benchmark, cluster_dir)
+            )
             threads.append(t)
-        
-        # Launch all threads.
+
+        # Start threads.
         for t in threads:
             t.start()
-        
-        # Wait for all benchmarks in this cluster to complete.
+
+        # Wait for all benchmarks to complete.
         for t in threads:
             t.join()
-        
-        print(f"Cluster {cluster.id} processing completed.")
-    
+
+        # Stop collectl monitoring.
+        stop_collectl(collectl_proc, log_fd, collectl_id)
+
+        # Execute post_process_cmd (if defined) after all benchmarks are complete.
+        if cluster.post_process_cmd:
+            print(
+                f"[Cluster {cluster.id}] Executing post_process_cmd: {cluster.post_process_cmd}"
+            )
+            post_result = subprocess.run(cluster.post_process_cmd, shell=True)
+            if post_result.returncode != 0:
+                print(
+                    f"[Cluster {cluster.id}] Post-process command failed with return code {post_result.returncode}"
+                )
+                Exception(
+                    f"Post-process command failed with return code {post_result.returncode}"
+                )
+
+        print(f"Cluster {cluster.id} run {run} processing completed.")
+
     def process_all(self):
         """
         Processes each ClusterInstance sequentially.
         """
         for cluster in self.clusters:
-            self.process_cluster(cluster)
+            # Run the cluster benchmarks the specified number of times.
+            for run in range(1, cluster.run_count + 1):
+                self.process_cluster(cluster, run)
         print("All benchmarks completed.")
+
 
 def main():
     parser = argparse.ArgumentParser(
         description="Benchmark Handler Script: Launch benchmarks for clusters and save results."
     )
     parser.add_argument("config_file", help="Path to the YAML configuration file.")
-    parser.add_argument("output_folder", nargs="?", help="Folder to store benchmark results.")
-    parser.add_argument("--check-config-file", action="store_true", 
-                        help="Only load and print the configuration file to check for errors.")
+    parser.add_argument(
+        "output_folder", nargs="?", help="Folder to store benchmark results."
+    )
+    parser.add_argument(
+        "--check-config-file",
+        action="store_true",
+        help="Only load and print the configuration file to check for errors.",
+    )
     args = parser.parse_args()
-    
+
     # If --check-config-file is provided, load and print the config file.
     if args.check_config_file:
         try:
@@ -154,11 +242,12 @@ def main():
     # For normal benchmark execution, ensure output_folder is provided.
     if not args.output_folder:
         parser.error("output_folder is required when not using --check-config-file")
-    
+
     os.makedirs(args.output_folder, exist_ok=True)
-    
+
     handler = BenchmarkHandler(args.config_file, args.output_folder)
     handler.process_all()
+
 
 if __name__ == "__main__":
     main()
