@@ -35,9 +35,9 @@ fi
 
 # Backup any existing netplan configuration file(s)
 NETPLAN_DIR="/etc/netplan"
-BACKUP_DIR="/etc/netplan/backup_$(date +%F_%T)"
+BACKUP_DIR="/etc/netplan_old/backup_$(date +%F_%T)"
 mkdir -p "$BACKUP_DIR"
-cp "$NETPLAN_DIR"/*.yaml "$BACKUP_DIR" 2>/dev/null
+mv "$NETPLAN_DIR"/*.yaml "$BACKUP_DIR" 2>/dev/null
 
 # Create a new netplan configuration file
 cat > "$NETPLAN_DIR/01-netcfg.yaml" <<EOF
