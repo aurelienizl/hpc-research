@@ -3,6 +3,7 @@ import sys
 import os
 import time
 import threading
+import argparse
 
 from config_handler import load_cluster_instances
 from cmd_builder import CmdBuilder
@@ -15,7 +16,7 @@ def save_results(output_dir, benchmark_id, results):
     """
     Saves result files for a given benchmark instance into an output folder.
     If a file already exists, a suffix is appended to the filename.
-    If the content of the file is empty (or contains only a newline) it is not written.
+    If the content of the file is empty (or contains only whitespace/newline), it is not written.
     """
     bench_out_dir = os.path.join(output_dir, benchmark_id)
     os.makedirs(bench_out_dir, exist_ok=True)
@@ -23,7 +24,7 @@ def save_results(output_dir, benchmark_id, results):
     for file_entry in results.get("results", []):
         fname = file_entry["filename"]
         content = file_entry["content"]
-        # Skip writing if content is empty or contains only whitespace/newline
+        # Skip writing if content is empty or contains only whitespace/newline.
         if not content.strip():
             continue
         dest_file = os.path.join(bench_out_dir, fname)
@@ -66,6 +67,7 @@ def process_benchmark(benchmark, cluster_dir):
     task_id = launch_resp.get("task_id")
     print(f"[{benchmark.id}] Launched with task_id: {task_id}")
     
+    time.sleep(10)  # Give some time for the task to start.
     # Poll the benchmark status until it is finished or encounters an error.
     while True:
         status_resp = api.get_status(task_id)
@@ -73,7 +75,7 @@ def process_benchmark(benchmark, cluster_dir):
         print(f"[{benchmark.id}] Status: {status}")
         if status in ["finished", "error"]:
             break
-        time.sleep(5)
+        time.sleep(10)  # Poll every 10 seconds.
     
     if status == "error":
         print(f"[{benchmark.id}] Benchmark failed with error: {status_resp.get('message')}")
@@ -105,12 +107,12 @@ class BenchmarkHandler:
         print(f"\nProcessing Cluster {cluster.id} ...")
         
         threads = []
-        # Create all threads for benchmarks first
+        # Create all threads for benchmarks first.
         for benchmark in cluster.benchmarks:
             t = threading.Thread(target=process_benchmark, args=(benchmark, cluster_dir))
             threads.append(t)
         
-        # Launch all threads after creation
+        # Launch all threads.
         for t in threads:
             t.start()
         
@@ -129,15 +131,33 @@ class BenchmarkHandler:
         print("All benchmarks completed.")
 
 def main():
-    if len(sys.argv) < 3:
-        print("Usage: python handler.py <config_file> <output_folder>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="Benchmark Handler Script: Launch benchmarks for clusters and save results."
+    )
+    parser.add_argument("config_file", help="Path to the YAML configuration file.")
+    parser.add_argument("output_folder", nargs="?", help="Folder to store benchmark results.")
+    parser.add_argument("--check-config-file", action="store_true", 
+                        help="Only load and print the configuration file to check for errors.")
+    args = parser.parse_args()
     
-    config_file = sys.argv[1]
-    output_folder = sys.argv[2]
-    os.makedirs(output_folder, exist_ok=True)
+    # If --check-config-file is provided, load and print the config file.
+    if args.check_config_file:
+        try:
+            clusters = load_cluster_instances(args.config_file)
+            print("Configuration file loaded successfully. Details:")
+            for cluster in clusters:
+                print(cluster)
+        except Exception as e:
+            print(f"Error loading configuration file: {e}")
+        return
+
+    # For normal benchmark execution, ensure output_folder is provided.
+    if not args.output_folder:
+        parser.error("output_folder is required when not using --check-config-file")
     
-    handler = BenchmarkHandler(config_file, output_folder)
+    os.makedirs(args.output_folder, exist_ok=True)
+    
+    handler = BenchmarkHandler(args.config_file, args.output_folder)
     handler.process_all()
 
 if __name__ == "__main__":

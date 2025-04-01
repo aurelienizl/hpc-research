@@ -190,16 +190,16 @@ def load_cluster_instances(file_path: str) -> List[ClusterInstance]:
         clusters.append(cluster)
     return clusters
 
-# Example usage:
-if __name__ == "__main__":
-    import sys
-    if len(sys.argv) < 2:
-        print("Usage: python config_handler.py <path_to_yaml>")
-        sys.exit(1)
-    config_file = sys.argv[1]
-    try:
-        clusters = load_cluster_instances(config_file)
-        for cluster in clusters:
-            print(f"Loaded ClusterInstance: {cluster}")
-    except Exception as e:
-        print(f"Error loading configuration: {e}")
+## Example usage:
+#if __name__ == "__main__":
+#    import sys
+#    if len(sys.argv) < 2:
+#        print("Usage: python config_handler.py <path_to_yaml>")
+#        sys.exit(1)
+#    config_file = sys.argv[1]
+#    try:
+#        clusters = load_cluster_instances(config_file)
+#        for cluster in clusters:
+#            print(f"Loaded ClusterInstance: {cluster}")
+#    except Exception as e:
+#        print(f"Error loading configuration: {e}")

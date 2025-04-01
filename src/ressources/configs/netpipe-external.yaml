@@ -1,0 +1,199 @@
+# This file contains the configuration for the NetPipe benchmark.
+
+cluster_instances:
+  - id: 1
+    pre_process_cmd: ""
+    post_process_cmd: ""
+    hosts:
+      - "192.168.1.30"
+      - "192.168.1.31"
+      - "192.168.1.32"
+      - "192.168.1.33"
+      - "192.168.1.34"
+      - "192.168.1.35"
+      - "192.168.1.36"
+      - "192.168.1.37"
+      - "192.168.1.251"
+      - "127.0.0.1"
+    benchmark:
+      - id: 100
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:1"
+          - "192.168.1.251:1"
+        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.30"
+        instances: 1
+      - id: 101
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:1"
+          - "192.168.1.251:1"
+        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.31"
+        instances: 1
+      - id: 102
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:1"
+          - "192.168.1.251:1"
+        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.32"
+        instances: 1
+      - id: 103
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:1"
+          - "192.168.1.251:1"
+        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.33"
+        instances: 1
+      - id: 104
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:1"
+          - "192.168.1.251:1"
+        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.34"
+        instances: 1
+      - id: 105
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:1"
+          - "192.168.1.251:1"
+        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.35"
+        instances: 1
+      - id: 106
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:1"
+          - "192.168.1.251:1"
+        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.36"
+        instances: 1
+      - id: 107
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:1"
+          - "192.168.1.251:1"
+        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.37"
+        instances: 1
+
+  - id: 2
+    pre_process_cmd: ""
+    post_process_cmd: ""
+    hosts:
+      - "192.168.1.30"
+      - "192.168.1.31"
+      - "192.168.1.32"
+      - "192.168.1.33"
+      - "192.168.1.251"
+      - "127.0.0.1"
+    benchmark:
+      - id: 100
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:1"
+          - "192.168.1.251:1"
+        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.30"
+        instances: 2
+      - id: 101
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:1"
+          - "192.168.1.251:1"
+        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.31"
+        instances: 2
+      - id: 102
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:1"
+          - "192.168.1.251:1"
+        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.32"
+        instances: 2
+      - id: 103
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:1"
+          - "192.168.1.251:1"
+        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.33"
+        instances: 2
+  
+  - id: 3
+    pre_process_cmd: ""
+    post_process_cmd: ""
+    hosts:
+      - "192.168.1.30"
+      - "192.168.1.31"
+      - "127.0.0.1"
+      - "192.168.1.251"
+    benchmark:
+      - id: 100
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:1"
+          - "192.168.1.251:1"
+        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.30"
+        instances: 4
+      - id: 101
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:1"
+          - "192.168.1.251:1"
+        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.31"
+        instances: 4
+
+  - id: 4
+    pre_process_cmd: ""
+    post_process_cmd: ""
+    hosts:
+      - "192.168.1.30"
+      - "127.0.0.1"
+      - "192.168.1.251"
+    benchmark:
+      - id: 100
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:1"
+          - "192.168.1.251:1"
+        mpi_args: "--bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.30"
+        instances: 8      
