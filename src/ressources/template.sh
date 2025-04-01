@@ -53,7 +53,8 @@ network:
         addresses: [$dns_list]
 EOF
 
-# Apply the new network configuration
+chmod 644 "$NETPLAN_DIR/01-netcfg.yaml"
+
 netplan generate
 netplan apply
 
