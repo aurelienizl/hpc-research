@@ -24,38 +24,62 @@ if [ "$vm_count" -gt "${#vms[@]}" ]; then
     exit 1
 fi
 
-echo "Processing the first $vm_count VM(s) with ${cores} CPU core(s) and ${mem_mb} MB memory..."
-
-# Loop over the selected VMs.
-for (( i=0; i<vm_count; i++ )); do
-    vm=${vms[i]}
-    
+# Shutdown all virtual machines first.
+echo "Initiating shutdown for all VMs..."
+for vm in "${vms[@]}"; do
     echo "Shutting down $vm..."
     virsh shutdown "$vm"
+done
 
-    echo "Waiting for $vm to shut down..."
-    # Wait until the VM is no longer running.
+echo "Waiting for all VMs to shut down..."
+for vm in "${vms[@]}"; do
     while [[ "$(virsh domstate "$vm")" == "running" ]]; do
         sleep 1
     done
     echo "$vm is now shut off."
+done
 
+echo "Processing the first $vm_count VM(s) with ${cores} CPU core(s) and ${mem_mb} MB memory..."
+
+# Loop over the selected VMs to update configuration and restart them.
+for (( i=0; i<vm_count; i++ )); do
+    vm=${vms[i]}
+    
     echo "Updating $vm: setting ${cores} CPU core(s) and ${mem_mb} MB memory..."
     
-    # Update CPU cores persistently.
-    virsh setvcpus "$vm" "$cores" --config
-    if [ $? -ne 0 ]; then
-        echo "Error setting CPU cores for $vm"
+    # Dump the current XML definition.
+    if ! virsh dumpxml "$vm" > "${vm}.xml"; then
+        echo "Error dumping XML for $vm. Skipping update for this VM."
+        continue
     fi
 
-    # Update memory size persistently.
-    virsh setmem "$vm" "$mem_kib" --config
-    if [ $? -ne 0 ]; then
-        echo "Error setting memory for $vm"
+    # Replace the <vcpu> element so that both the inner value and the 'current' attribute match the desired CPU count.
+    if ! sed -i "s|<vcpu[^>]*>[^<]*</vcpu>|<vcpu placement=\"static\" current=\"$cores\">$cores</vcpu>|" "${vm}.xml"; then
+        echo "Error updating XML file for $vm. Skipping update for this VM."
+        continue
+    fi
+
+    if ! virsh define "${vm}.xml"; then
+        echo "Error defining updated configuration for $vm. Skipping update for this VM."
+        continue
+    fi
+
+    # Update memory settings: set both maximum and current memory.
+    if ! virsh setmaxmem "$vm" "$mem_kib" --config; then
+        echo "Error setting max memory for $vm. Skipping update for this VM."
+        continue
+    fi
+
+    if ! virsh setmem "$vm" "$mem_kib" --config; then
+        echo "Error setting memory for $vm. Skipping update for this VM."
+        continue
     fi
 
     echo "Starting $vm..."
-    virsh start "$vm"
+    if ! virsh start "$vm"; then
+        echo "Error starting $vm."
+        continue
+    fi
 done
 
 echo "Configuration update and startup complete for the selected VMs."
