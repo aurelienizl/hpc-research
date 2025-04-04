@@ -42,6 +42,13 @@ create_user_if_needed() {
         chown "$username:$username" "/home/$username/.ssh/authorized_keys"
 
         log "SSH key generated and added to authorized_keys for user '$username'"
+
+        sudo apt-get install -y python3 python3-venv 
+        if [ $? -ne 0 ]; then
+            log "ERROR: Failed to install Python 3 and venv"
+            exit 1
+        fi
+        log "Python 3 and venv installed successfully"
     fi
 }
 
