@@ -79,7 +79,7 @@ create_startup_script() {
         exit 1
     }
 
-    git checkout dev
+    git checkout v2
     if [ $? -ne 0 ]; then
         echo "ERROR: Git checkout failed"
         exit 1
