@@ -1,10 +1,8 @@
 cluster_instances:
-  - id: 1
+  - name: "netpipe_baremetal_8instances"
     pre_process_cmd: "bash /script.sh 8 16384 0 && sleep 60"
     post_process_cmd: ""
     run_count: 30
-    hosts:
-      - "127.0.0.1"
     benchmark:
       - id: 100
         type: "NPmpi"
@@ -15,13 +13,10 @@ cluster_instances:
         target_nodes:
           - "127.0.0.1"
         instances: 1      
-  - id: 2
+  - name: "netpipe_simple_1vm"
     pre_process_cmd: "bash /script.sh 8 16384 1 && sleep 60"
     post_process_cmd: ""
     run_count: 30
-    hosts:
-      - "192.168.1.30"
-      - "127.0.0.1"
     benchmark:
       - id: 100
         type: "NPmpi"
@@ -32,13 +27,10 @@ cluster_instances:
         target_nodes:
           - "192.168.1.30"
         instances: 1      
-  - id: 3
+  - name: "netpipe_simple_2vm"
     pre_process_cmd: "bash /script.sh 4 8192 1 && sleep 60"
     post_process_cmd: ""
     run_count: 30
-    hosts:
-      - "192.168.1.30"
-      - "127.0.0.1"
     benchmark:
       - id: 100
         type: "NPmpi"
@@ -49,13 +41,10 @@ cluster_instances:
         target_nodes:
           - "192.168.1.30"
         instances: 1      
-  - id: 4
+  - name: "netpipe_simple_4vm"
     pre_process_cmd: "bash /script.sh 2 4096 1 && sleep 60"
     post_process_cmd: ""
     run_count: 30
-    hosts:
-      - "192.168.1.30"
-      - "127.0.0.1"
     benchmark:
       - id: 100
         type: "NPmpi"
@@ -66,13 +55,10 @@ cluster_instances:
         target_nodes:
           - "192.168.1.30"
         instances: 1      
-  - id: 5
+  - name: "netpipe_simple_8vm"
     pre_process_cmd: "bash /script.sh 1 2048 1 && sleep 60"
     post_process_cmd: ""
     run_count: 30
-    hosts:
-      - "192.168.1.30"
-      - "127.0.0.1"
     benchmark:
       - id: 100
         type: "NPmpi"

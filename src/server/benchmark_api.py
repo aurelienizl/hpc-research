@@ -91,36 +91,36 @@ class BenchmarkAPI:
 
 
 ## Example usage (for testing purposes):
-if __name__ == "__main__":
-    # Replace with your actual client URL and secret key.
-    client_url = "http://localhost:5000"
-    secret_key = "mySecret123"
-
-    api = BenchmarkAPI(client_url, secret_key)
-
-    # Launch benchmark using a simple command with pre and post commands.
-    launch_response = api.launch_benchmark(
-        "sysbench cpu run",
-        pre_cmd_exec="echo pre-cmd executed",
-        post_cmd_exec="echo post-cmd executed",
-    )
-    print("Launch response:", launch_response)
-
-    task_id = launch_response.get("task_id")
-    if task_id:
-        print("Task ID:", task_id)
-        while True:
-            # Check the status of the benchmark task.
-            status_response = api.get_status(task_id)
-            print("Status response:", status_response)
-
-            if status_response.get("status") in ["finished", "error"]:
-                break
-            # Sleep for a while before checking again.
-            time.sleep(5)
-
-        # Get benchmark results.
-        results_response = api.get_results(task_id)
-        print("Results response:", results_response)
-    else:
-        print("Error launching benchmark:", launch_response.get("message"))
+#if __name__ == "__main__":
+#    # Replace with your actual client URL and secret key.
+#    client_url = "http://localhost:5000"
+#    secret_key = "mySecret123"
+#
+#    api = BenchmarkAPI(client_url, secret_key)
+#
+#    # Launch benchmark using a simple command with pre and post commands.
+#    launch_response = api.launch_benchmark(
+#        "sysbench cpu run",
+#        pre_cmd_exec="echo pre-cmd executed",
+#        post_cmd_exec="echo post-cmd executed",
+#    )
+#    print("Launch response:", launch_response)
+#
+#    task_id = launch_response.get("task_id")
+#    if task_id:
+#        print("Task ID:", task_id)
+#        while True:
+#            # Check the status of the benchmark task.
+#            status_response = api.get_status(task_id)
+#            print("Status response:", status_response)
+#
+#            if status_response.get("status") in ["finished", "error"]:
+#                break
+#            # Sleep for a while before checking again.
+#            time.sleep(5)
+#
+#        # Get benchmark results.
+#        results_response = api.get_results(task_id)
+#        print("Results response:", results_response)
+#    else:
+#        print("Error launching benchmark:", launch_response.get("message"))
