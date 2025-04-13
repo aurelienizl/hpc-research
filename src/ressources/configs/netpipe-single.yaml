@@ -1,18 +1,4 @@
-cluster_instances:
-  - name: "netpipe_baremetal_8instances"
-    pre_process_cmd: "bash /script.sh 8 16384 0 && sleep 60"
-    post_process_cmd: ""
-    run_count: 30
-    benchmark:
-      - id: 100
-        type: "NPmpi"
-        mpi_processes: 2
-        mpi_hosts:
-          - "127.0.0.1:2"
-        mpi_args: "--oversubscribe --bind-to none"
-        target_nodes:
-          - "127.0.0.1"
-        instances: 1      
+cluster_instances:   
   - name: "netpipe_simple_1vm"
     pre_process_cmd: "bash /script.sh 8 16384 1 && sleep 60"
     post_process_cmd: ""
