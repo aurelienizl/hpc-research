@@ -1,5 +1,5 @@
 cluster_instances:
-  - name: "localhost_benchmark"
+  - name: "Bare-Metal-1I-Intra"
     run_count: 30
     pre_process_cmd: ""
     post_process_cmd: ""
@@ -12,8 +12,8 @@ cluster_instances:
         mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
         target_nodes:
           - "127.0.0.1"
-        instances: 8
-  - name: "localhost_benchmark_external"
+        instances: 1
+  - name: "Bare-Metal-1I-Inter"
     pre_process_cmd: ""
     post_process_cmd: ""
     run_count: 30
@@ -27,4 +27,4 @@ cluster_instances:
         mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
         target_nodes:
           - "127.0.0.1"
-        instances: 8    
+        instances: 1    
