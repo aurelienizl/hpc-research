@@ -28,3 +28,32 @@ cluster_instances:
         target_nodes:
           - "127.0.0.1"
         instances: 1    
+  - name: "Bare-Metal-8I-Intra"
+    run_count: 30
+    pre_process_cmd: ""
+    post_process_cmd: ""
+    benchmark:
+      - id: 100
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:2"
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "127.0.0.1"
+        instances: 8
+  - name: "Bare-Metal-8I-Inter"
+    pre_process_cmd: ""
+    post_process_cmd: ""
+    run_count: 30
+    benchmark:
+      - id: 100
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:1"
+          - "192.168.1.251:1"
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "127.0.0.1"
+        instances: 8
