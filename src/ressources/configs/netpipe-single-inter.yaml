@@ -1,5 +1,5 @@
 cluster_instances:   
-  - name: "netpipe_simple_8cpu_inter"
+  - name: "netpipe_inter_8cpu_1i"
     pre_process_cmd: "bash /script.sh 8 16384 1 && sleep 60"
     post_process_cmd: ""
     run_count: 30
@@ -14,7 +14,7 @@ cluster_instances:
         target_nodes:
           - "192.168.1.30"
         instances: 1      
-  - name: "netpipe_simple_4cpu_inter"
+  - name: "netpipe_inter_4cpu_1i"
     pre_process_cmd: "bash /script.sh 4 8192 1 && sleep 60"
     post_process_cmd: ""
     run_count: 30
@@ -29,7 +29,7 @@ cluster_instances:
         target_nodes:
           - "192.168.1.30"
         instances: 1      
-  - name: "netpipe_simple_2cpu_inter"
+  - name: "netpipe_inter_2cpu_1i"
     pre_process_cmd: "bash /script.sh 2 4096 1 && sleep 60"
     post_process_cmd: ""
     run_count: 30
@@ -44,7 +44,7 @@ cluster_instances:
         target_nodes:
           - "192.168.1.30"
         instances: 1      
-  - name: "netpipe_simple_1cpu_inter"
+  - name: "netpipe_inter_1cpu_1i"
     pre_process_cmd: "bash /script.sh 1 2048 1 && sleep 60"
     post_process_cmd: ""
     run_count: 30
