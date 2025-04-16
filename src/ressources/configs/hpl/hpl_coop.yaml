@@ -2,15 +2,15 @@
 
 cluster_instances:
   - name: "hpl_test"
-    pre_process_cmd: "bash /script.sh 8 16384 1 && sleep 60 "
-    run_count: 30
+    pre_process_cmd: "bash /script.sh 8 16384 1 && sleep 60 && wget https://github.com/aurelienizl/hpc-research/blob/v2/src/ressources/configs/hpl/HPL_COMP.conf -o HPL.dat"
+    run_count: 1
     post_process_cmd: ""
     benchmark:
       - id: 100
         type: "xhpl"
-        mpi_processes: 2
+        mpi_processes: 1
         mpi_hosts:
-          - "192.168.1.30:8"
+          - "192.168.1.30:1"
         mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
         target_nodes:
           - "192.168.1.30"
