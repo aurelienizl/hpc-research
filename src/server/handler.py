@@ -88,14 +88,14 @@ def process_benchmark_on_target(benchmark, cluster_dir, target_node):
 
     task_id = launch_resp.get("task_id")
     print(f"[{benchmark_id}] Launched with task_id: {task_id}")
-    time.sleep(90)  # Wait a bit for the task to start.
+    time.sleep(60) # Wait for the task to be accepted
     while True:
         status_resp = api.get_status(task_id)
         status = status_resp.get("status")
         print(f"[{benchmark_id}] Status: {status}")
         if status in ["finished", "error"]:
             break
-        time.sleep(60)  # Poll every 60 seconds.
+        time.sleep(5)  
 
     if status == "error":
         print(f"[{benchmark_id}] Benchmark failed with error: {status_resp.get('message')}")
@@ -172,30 +172,46 @@ class BenchmarkHandler:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Benchmark Handler Script: Launch benchmarks for clusters and save results."
+        description="Benchmark Handler Script: Launch benchmarks for all YAML configs in a folder and save results."
     )
-    parser.add_argument("config_file", help="Path to the YAML configuration file.")
-    parser.add_argument("output_folder", nargs="?", help="Folder to store benchmark results.")
-    parser.add_argument("--check-config-file", action="store_true",
-                        help="Only load and print the configuration file to check for errors.")
+    parser.add_argument("config_folder", help="Folder containing YAML configuration files.")
+    parser.add_argument("--check-config-files", action="store_true",
+                        help="Only load and print all configuration files to check for errors.")
     args = parser.parse_args()
 
-    if args.check_config_file:
-        try:
-            clusters = load_cluster_instances(args.config_file)
-            print("Configuration file loaded successfully. Details:")
-            for cluster in clusters:
-                print(cluster)
-        except Exception as e:
-            print(f"Error loading configuration file: {e}")
+    config_folder = args.config_folder
+    if not os.path.isdir(config_folder):
+        parser.error(f"{config_folder} is not a valid directory.")
+
+    yaml_files = [f for f in os.listdir(config_folder)
+                  if f.lower().endswith(('.yaml', '.yml')) and os.path.isfile(os.path.join(config_folder, f))]
+    if not yaml_files:
+        print(f"No YAML configuration files found in {config_folder}.")
         return
 
-    if not args.output_folder:
-        parser.error("output_folder is required when not using --check-config-file")
-    os.makedirs(args.output_folder, exist_ok=True)
+    if args.check_config_files:
+        for yaml_file in yaml_files:
+            config_path = os.path.join(config_folder, yaml_file)
+            print(f"\nChecking {yaml_file}:")
+            try:
+                clusters = load_cluster_instances(config_path)
+                print("  Loaded successfully. Details:")
+                for cluster in clusters:
+                    print(f"    {cluster}")
+            except Exception as e:
+                print(f"  Error loading configuration file: {e}")
+        return
 
-    handler = BenchmarkHandler(args.config_file, args.output_folder)
-    handler.process_all()
+    output_folder = config_folder  # Use the config folder itself as output folder
+
+    for yaml_file in yaml_files:
+        config_path = os.path.join(config_folder, yaml_file)
+        print(f"\nProcessing config: {yaml_file}")
+        try:
+            handler = BenchmarkHandler(config_path, output_folder)
+            handler.process_all()
+        except Exception as e:
+            print(f"Error processing {yaml_file}: {e}")
 
 if __name__ == "__main__":
     main()
