@@ -1,0 +1,57 @@
+cluster_instances:   
+  - name: "netpipe_simple_8cpu_intra"
+    pre_process_cmd: "bash /script.sh 8 16384 1 && sleep 60"
+    post_process_cmd: ""
+    run_count: 30
+    benchmark:
+      - id: 100
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:2"
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.30"
+        instances: 1      
+  - name: "netpipe_simple_4cpu_intra"
+    pre_process_cmd: "bash /script.sh 4 8192 1 && sleep 60"
+    post_process_cmd: ""
+    run_count: 30
+    benchmark:
+      - id: 100
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:2"
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.30"
+        instances: 1      
+  - name: "netpipe_simple_2cpu_intra"
+    pre_process_cmd: "bash /script.sh 2 4096 1 && sleep 60"
+    post_process_cmd: ""
+    run_count: 30
+    benchmark:
+      - id: 100
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:2"
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.30"
+        instances: 1      
+  - name: "netpipe_simple_1cpu_intra"
+    pre_process_cmd: "bash /script.sh 1 2048 1 && sleep 60"
+    post_process_cmd: ""
+    run_count: 30
+    benchmark:
+      - id: 100
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:2"
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.30"
+        instances: 1      
