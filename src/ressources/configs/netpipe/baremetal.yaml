@@ -1,6 +1,6 @@
 cluster_instances:
   - name: "Bare-Metal-1I-Intra"
-    run_count: 30
+    run_count: 5
     pre_process_cmd: ""
     post_process_cmd: ""
     benchmark:
@@ -16,7 +16,7 @@ cluster_instances:
   - name: "Bare-Metal-1I-Inter"
     pre_process_cmd: ""
     post_process_cmd: ""
-    run_count: 30
+    run_count: 5
     benchmark:
       - id: 100
         type: "NPmpi"
@@ -29,7 +29,7 @@ cluster_instances:
           - "127.0.0.1"
         instances: 1    
   - name: "Bare-Metal-8I-Intra"
-    run_count: 30
+    run_count: 5
     pre_process_cmd: ""
     post_process_cmd: ""
     benchmark:
@@ -45,7 +45,7 @@ cluster_instances:
   - name: "Bare-Metal-8I-Inter"
     pre_process_cmd: ""
     post_process_cmd: ""
-    run_count: 30
+    run_count: 5
     benchmark:
       - id: 100
         type: "NPmpi"

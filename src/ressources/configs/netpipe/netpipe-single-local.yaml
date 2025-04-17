@@ -2,7 +2,7 @@ cluster_instances:
   - name: "netpipe_simple_8cpu_local"
     pre_process_cmd: "bash /script.sh 8 16384 2 && sleep 60"
     post_process_cmd: ""
-    run_count: 30
+    run_count: 5
     benchmark:
       - id: 100
         type: "NPmpi"
@@ -17,7 +17,7 @@ cluster_instances:
   - name: "netpipe_simple_4cpu_local"
     pre_process_cmd: "bash /script.sh 4 8192 2 && sleep 60"
     post_process_cmd: ""
-    run_count: 30
+    run_count: 5
     benchmark:
       - id: 100
         type: "NPmpi"
@@ -32,7 +32,7 @@ cluster_instances:
   - name: "netpipe_simple_2cpu_local"
     pre_process_cmd: "bash /script.sh 2 4096 2 && sleep 60"
     post_process_cmd: ""
-    run_count: 30
+    run_count: 5
     benchmark:
       - id: 100
         type: "NPmpi"
@@ -47,7 +47,7 @@ cluster_instances:
   - name: "netpipe_simple_1cpu_local"
     pre_process_cmd: "bash /script.sh 1 2048 2 && sleep 60"
     post_process_cmd: ""
-    run_count: 30
+    run_count: 5
     benchmark:
       - id: 100
         type: "NPmpi"
