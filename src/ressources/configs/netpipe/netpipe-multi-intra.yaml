@@ -1,7 +1,7 @@
 # This file contains the configuration for the NetPipe benchmark.
 
 cluster_instances:
-  - name: "netpipe_internal_8vm"
+  - name: "netpipe-multi-intra-8vm"
     pre_process_cmd: "bash /script.sh 1 2048 8 && sleep 60"
     post_process_cmd: ""
     run_count: 5
@@ -23,7 +23,7 @@ cluster_instances:
           - "192.168.1.37"
         instances: 1
 
-  - name: "netpipe_internal_4vm"
+  - name: "netpipe-multi-intra-4vm"
     pre_process_cmd: "bash /script.sh 2 4096 4 && sleep 60"
     post_process_cmd: ""
     run_count: 5
@@ -41,7 +41,7 @@ cluster_instances:
           - "192.168.1.33"
         instances: 2
   
-  - name: "netpipe_internal_2vm"
+  - name: "netpipe-multi-intra-2vm"
     pre_process_cmd: "bash /script.sh 4 8192 2 && sleep 60"
     post_process_cmd: ""
     run_count: 5
@@ -57,7 +57,7 @@ cluster_instances:
           - "192.168.1.31"
         instances: 4
 
-  - name: "netpipe_internal_1vm"
+  - name: "netpipe-multi-intra-1vm"
     pre_process_cmd: "bash /script.sh 8 16384 1 && sleep 60"
     post_process_cmd: ""
     run_count: 5
