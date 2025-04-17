@@ -8,7 +8,7 @@ required_libs=(
     wget
 )
 
-collectl_url="https://kumisystems.dl.sourceforge.net/project/collectl/collectl/collectl-4.3.1/collectl-4.3.1.src.tar.gz"
+collectl_url="https://downloads.sourceforge.net/project/collectl/collectl/collectl-4.3.1/collectl-4.3.1.src.tar.gz"
 
 install_collectl() {
     log "Installing Collectl..."
