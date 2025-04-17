@@ -11,7 +11,7 @@ cluster_instances:
         mpi_processes: 2
         mpi_hosts:
           - "127.0.0.1:2"
-        mpi_args: "--oversubscribe --bind-to none"
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
         target_nodes:
           - "192.168.1.30"
           - "192.168.1.31"
@@ -33,7 +33,7 @@ cluster_instances:
         mpi_processes: 2
         mpi_hosts:
           - "127.0.0.1:2"
-        mpi_args: "--oversubscribe --bind-to none"
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
         target_nodes:
           - "192.168.1.30"
           - "192.168.1.31"
@@ -51,7 +51,7 @@ cluster_instances:
         mpi_processes: 2
         mpi_hosts:
           - "127.0.0.1:2"
-        mpi_args: "--oversubscribe --bind-to none"
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
         target_nodes:
           - "192.168.1.30"
           - "192.168.1.31"
@@ -67,7 +67,7 @@ cluster_instances:
         mpi_processes: 2
         mpi_hosts:
           - "127.0.0.1:2"
-        mpi_args: "--oversubscribe --bind-to none"
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
         target_nodes:
           - "192.168.1.30"
         instances: 8      
