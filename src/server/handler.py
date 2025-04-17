@@ -202,10 +202,15 @@ def main():
                 print(f"  Error loading configuration file: {e}")
         return
 
-    output_folder = config_folder  # Use the config folder itself as output folder
+    # Use the current working directory as the base for results
+    base_output_dir = os.getcwd()
 
     for yaml_file in yaml_files:
         config_path = os.path.join(config_folder, yaml_file)
+        # Remove extension for output folder name
+        output_folder_name = os.path.splitext(yaml_file)[0]
+        output_folder = os.path.join(base_output_dir, output_folder_name)
+        os.makedirs(output_folder, exist_ok=True)
         print(f"\nProcessing config: {yaml_file}")
         try:
             handler = BenchmarkHandler(config_path, output_folder)

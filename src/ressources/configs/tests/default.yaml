@@ -1,0 +1,15 @@
+cluster_instances:
+  - name: "FULL_TESTS"
+    run_count: 5
+    pre_process_cmd: "" 
+    post_process_cmd: ""
+    benchmark:
+      - id: 100
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:2"
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "127.0.0.1"
+        instances: 1
