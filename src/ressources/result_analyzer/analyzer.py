@@ -3,6 +3,7 @@ import re
 import sys
 import glob
 
+# ========================= NPdata Classes ============================
 class NPdata:
     def __init__(self, file_path: str = None, col1: list = None, col2: list = None, col3: list = None):
         """
@@ -34,7 +35,7 @@ class NPdata:
             raise FileNotFoundError(f"File not found: {file_path}")
             
         with open(file_path, "r") as file:
-            # Read and filter out any blank lines (if any exist, they will be skipped)
+            # Read and filter out any blank lines
             lines = [line.strip() for line in file if line.strip() != ""]
             
         if len(lines) != 124:
@@ -64,18 +65,14 @@ class NPdata:
             for i in range(124):
                 f.write(f"{self.col1[i]} {self.col2[i]} {self.col3[i]}\n")
 
+
 class NPInstance:
     def __init__(self):
-        """
-        Container for NPdata objects corresponding to multiple benchmark runs.
-        """
+        """Container for NPdata objects (benchmark runs)."""
         self.benchmarks = []  # List of NPdata instances
 
     def add_benchmark(self, npdata: NPdata):
-        """
-        Add an NPdata object to the instance.
-        :param npdata: An NPdata instance.
-        """
+        """Adds an NPdata object to the instance."""
         self.benchmarks.append(npdata)
 
     def compute_averages(self) -> NPdata:
@@ -102,70 +99,152 @@ class NPInstance:
             
         return NPdata(col1=avg_col1, col2=avg_col2, col3=avg_col3)
 
-class ReportingTool:
-    def __init__(self, base_dir: str):
-        """
-        Entry point class that loads a folder and classifies benchmark data into cluster instances.
-        :param base_dir: The directory that contains the benchmark subfolders.
-        """
-        self.base_dir = base_dir
-        # Dictionary with key as cluster id (string) and value as an NPInstance containing relevant NPdata objects.
-        self.clusters = {}
 
-    def load_instances(self):
+# ===================== Collectl Data Classes ==========================
+class CollectlData:
+    def __init__(self, file_path: str):
         """
-        Traverses the base directory, finds subdirectories matching the naming pattern "cluster_<id>_<runID>",
-        recursively searches for all np.out files inside each, and adds the found NPdata objects to the appropriate NPInstance.
+        Reads a collectl.log file and stores the line‐by‐line values
+        for the two metrics: "cputotals.total" and "meminfo.used".
+        :param file_path: Path to the collectl.log file.
+        :raises Exception: if file reading fails or if the two metrics are inconsistent.
         """
-        if not os.path.isdir(self.base_dir):
-            raise NotADirectoryError(f"{self.base_dir} is not a valid directory.")
+        self.cputotals = []  # List of values (one per sample)
+        self.meminfo_used = []  # List of values (one per sample)
+        self.load_from_file(file_path)
 
-        # Look for directories matching cluster_<clusterID>_<runID>
-        for entry in os.listdir(self.base_dir):
-            full_dir_path = os.path.join(self.base_dir, entry)
-            if os.path.isdir(full_dir_path):
-                match = re.match(r"cluster_(\d+)_(\d+)$", entry)
-                if match:
-                    cluster_id = match.group(1)
-                    # Search recursively for all np.out files within this folder
-                    np_out_files = glob.glob(os.path.join(full_dir_path, "**", "np.out"), recursive=True)
-                    if not np_out_files:
-                        print(f"Skipping '{full_dir_path}' because no np.out files were found inside it.")
-                    for np_out_path in np_out_files:
-                        try:
-                            np_data = NPdata(file_path=np_out_path)
-                        except Exception as e:
-                            print(f"Skipping '{np_out_path}' due to error: {e}")
-                            continue
-
-                        if cluster_id not in self.clusters:
-                            self.clusters[cluster_id] = NPInstance()
-                        self.clusters[cluster_id].add_benchmark(np_data)
-
-    def compute_and_store_averages(self):
+    def load_from_file(self, file_path: str):
         """
-        For each cluster identified, computes the average NPdata and writes it to the file
-        "cluster_<clusterID>_averages.out" in the base directory.
+        Reads the collectl.log file and, for each line that begins with one of our keys,
+        appends its numeric value to the appropriate list.
         """
-        for cluster_id, np_instance in self.clusters.items():
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"File not found: {file_path}")
+        
+        with open(file_path, "r") as file:
+            for line in file:
+                parts = line.strip().split()
+                if len(parts) < 2:
+                    continue
+                key = parts[0]
+                try:
+                    value = float(parts[1])
+                except ValueError:
+                    continue
+                if key == "cputotals.total":
+                    self.cputotals.append(value)
+                elif key == "meminfo.used":
+                    self.meminfo_used.append(value)
+        if len(self.cputotals) != len(self.meminfo_used):
+            raise ValueError(f"Mismatch in sample count between cputotals.total and meminfo.used in {file_path}")
+
+
+class CollectlInstance:
+    def __init__(self):
+        """Container for CollectlData objects (runs)."""
+        self.collectl_data_list = []
+    
+    def add_collectl_data(self, cdata: CollectlData):
+        """Adds a CollectlData object to the instance."""
+        self.collectl_data_list.append(cdata)
+    
+    def compute_line_by_line_averages(self):
+        """
+        Computes line-by-line averages for both metrics across all runs.
+        Uses the minimum sample count among the files to avoid index errors.
+        :return: Two lists: (avg_cputotals, avg_meminfo)
+        """
+        if not self.collectl_data_list:
+            return None, None
+
+        # Use the minimum number of samples across all files
+        num_samples = min(len(cd.cputotals) for cd in self.collectl_data_list)
+        avg_cputotals = []
+        avg_meminfo = []
+        for i in range(num_samples):
+            avg_total = sum(cd.cputotals[i] for cd in self.collectl_data_list) / len(self.collectl_data_list)
+            avg_mem = sum(cd.meminfo_used[i] for cd in self.collectl_data_list) / len(self.collectl_data_list)
+            avg_cputotals.append(avg_total)
+            avg_meminfo.append(avg_mem)
+        return avg_cputotals, avg_meminfo
+
+
+# ======================= Folder Processing Function ======================
+def process_folder(base_dir: str):
+    print(f"\nProcessing base directory: {base_dir}")
+
+    # Recursively search for np.out files within the base folder
+    np_files = glob.glob(os.path.join(base_dir, "**", "np.out"), recursive=True)
+    if not np_files:
+        print("No np.out files found in", base_dir)
+    else:
+        np_instance = NPInstance()
+        for np_file in np_files:
             try:
-                avg_data = np_instance.compute_averages()
-                output_path = os.path.join(self.base_dir, f"cluster_{cluster_id}_averages.out")
-                avg_data.write(output_path)
-                print(f"Wrote average file for cluster {cluster_id} to '{output_path}'")
+                np_data = NPdata(file_path=np_file)
+                np_instance.add_benchmark(np_data)
             except Exception as e:
-                print(f"Failed to compute/store averages for cluster {cluster_id}: {e}")
+                print(f"Skipping '{np_file}' due to error: {e}")
+        try:
+            avg_np_data = np_instance.compute_averages()
+            np_output_path = os.path.join(base_dir, "np-averages.out")
+            avg_np_data.write(np_output_path)
+            print(f"Wrote NP averages to '{np_output_path}'")
+        except Exception as e:
+            print(f"Failed to compute/store NP averages for {base_dir}: {e}")
 
-if __name__ == "__main__":
+    # Recursively search for collectl.log files within the base folder
+    collectl_files = glob.glob(os.path.join(base_dir, "**", "collectl.log"), recursive=True)
+    if not collectl_files:
+        print("No collectl.log files found in", base_dir)
+    else:
+        collectl_instance = CollectlInstance()
+        for cl_file in collectl_files:
+            try:
+                cl_data = CollectlData(cl_file)
+                collectl_instance.add_collectl_data(cl_data)
+            except Exception as e:
+                print(f"Skipping '{cl_file}' due to error: {e}")
+        avg_cputotals, avg_meminfo = collectl_instance.compute_line_by_line_averages()
+        if avg_cputotals is None or avg_meminfo is None:
+            print("Failed to compute averages for collectl data in", base_dir)
+        else:
+            collectl_output_path = os.path.join(base_dir, "collectl-averages.out")
+            try:
+                with open(collectl_output_path, "w") as f:
+                    for i in range(len(avg_cputotals)):
+                        f.write(f"cputotals.total {avg_cputotals[i]}\n")
+                        f.write(f"meminfo.used {avg_meminfo[i]}\n")
+                print(f"Wrote collectl averages to '{collectl_output_path}'")
+            except Exception as e:
+                print(f"Failed to write collectl averages for {base_dir}: {e}")
+
+
+# ======================= New Main Routine =============================
+def main():
     if len(sys.argv) < 2:
-        print("Usage: python reporting_tool.py /path/to/base_dir")
+        print("Usage: python reporting_tool.py <glob_pattern> [additional_patterns ...]")
         sys.exit(1)
 
-    base_directory = sys.argv[1]
-    tool = ReportingTool(base_directory)
+    # If multiple arguments are given, they may be pre-expanded by the shell.
+    # We iterate over all provided arguments.
+    base_dirs = []
+    for arg in sys.argv[1:]:
+        if os.path.isdir(arg):
+            base_dirs.append(arg)
+        else:
+            # Try to expand if not a directory already
+            base_dirs.extend(glob.glob(arg))
     
-    # Load NPdata objects from the subdirectories and group them by cluster id.
-    tool.load_instances()
-    
-    # Compute averages for each cluster and write them to output files.
-    tool.compute_and_store_averages()
+    if not base_dirs:
+        print("No directories matched the given pattern(s).")
+        sys.exit(1)
+
+    for base_dir in base_dirs:
+        if not os.path.isdir(base_dir):
+            print(f"Skipping '{base_dir}' because it is not a directory.")
+            continue
+        process_folder(base_dir)
+
+if __name__ == "__main__":
+    main()
