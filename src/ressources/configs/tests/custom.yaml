@@ -1,0 +1,22 @@
+cluster_instances:
+  - name: "SysbenchCluster"
+    # Runs once per cluster before any benchmarks
+    pre_process_cmd: "echo \"Starting Sysbench tests on $(hostname)\""
+    run_count: 1         # how many full cluster runs you want
+
+    benchmark:
+      # CPU test
+      - id: cpu_test
+        # No preparatory step needed; leave pre_cmd_exec blank or omit
+        command_line: "sysbench cpu run"
+        target_nodes:
+          - "127.0.0.1"
+        instances: 1
+
+      # Memory throughput test
+      - id: mem_test
+        # prepare the test data (optional for many memory tests)
+        command_line: "sysbench memory run"
+        target_nodes:
+          - "127.0.0.1"
+        instances: 1

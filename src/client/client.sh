@@ -1,152 +1,137 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # test_all.sh
-# Comprehensive tests for the benchmark client API endpoints.
-# Requires 'jq' for JSON parsing.
+# Comprehensive tests for the two-step init/launch benchmark API.
+# Requires 'jq'.
 
 SERVER_URL="http://localhost:5000"
 VALID_SECRET="mySecret123"
 INVALID_SECRET="wrongSecret"
-# Using sysbench for a valid test; adjust as needed.
 COMMAND="sysbench cpu run"
-# For a long-running test, we use a simple sleep command.
-LONG_COMMAND="sleep 10"
+# Fake UUID for negative tests
+FAKE_ID="00000000-0000-0000-0000-000000000000"
 
-# Function: Poll until task is no longer running.
-function poll_status() {
-    local task_id=$1
-    local status="running"
-    echo "Polling status for task_id: $task_id ..."
-    while [ "$status" == "running" ]; do
-        sleep 2
-        status_response=$(curl -s "$SERVER_URL/api/benchmark/status/$task_id")
-        status=$(echo "$status_response" | jq -r '.status')
-        echo "Current status: $status"
-        if [ "$status" == "error" ]; then
-            echo "Task $task_id ended with error."
+# Poll until status is not 'initializing' or 'running'.
+poll_status() {
+    local task_id="$1"
+    echo -n "Polling status for task_id: $task_id ... "
+    while true; do
+        resp=$(curl -s "$SERVER_URL/api/benchmark/status/$task_id")
+        status=$(echo "$resp" | jq -r '.status')
+        # If jq fails, show raw response and exit
+        if [[ $? -ne 0 ]]; then
+            echo "\nInvalid JSON response: $resp"
             return 1
         fi
+        echo -n "$status "
+        if [[ "$status" != "initializing" && "$status" != "running" ]]; then
+            break
+        fi
+        sleep 1
     done
+    echo
     return 0
 }
 
-# Test 1: Valid benchmark launch (with pre and post commands), status polling, and results retrieval.
-function test_valid() {
-    echo "=== Test 1: Valid Launch with pre_cmd_exec and post_cmd_exec ==="
-    response=$(curl -s -X POST "$SERVER_URL/api/benchmark/launch" \
-      -H "Content-Type: application/json" \
-      -d "{\"command\": \"$COMMAND\", \"secret_key\": \"$VALID_SECRET\", \"pre_cmd_exec\": \"echo pre-cmd executed\", \"post_cmd_exec\": \"echo post-cmd executed\"}")
-    echo "Launch response: $response"
-    task_id=$(echo "$response" | jq -r '.task_id')
-    if [ -z "$task_id" ] || [ "$task_id" == "null" ]; then
-        echo "Test 1 FAILED: No valid task_id returned."
-        return 1
-    fi
-    echo "Task ID: $task_id"
-    
-    if ! poll_status "$task_id"; then
-        echo "Test 1 FAILED: Task encountered error."
+# Test 1: Valid init + launch + results
+test_valid() {
+    echo "=== Test 1: Valid init → launch → results ==="
+    # INIT
+    init_resp=$(curl -s -X POST "$SERVER_URL/api/benchmark/init" \
+        -H 'Content-Type: application/json' \
+        -d '{"secret_key":"'"$VALID_SECRET"'","pre_cmd_exec":"echo pre-cmd > pre.txt"}')
+    echo "Init response: $init_resp"
+    task_id=$(echo "$init_resp" | jq -r '.task_id')
+    if [[ -z "$task_id" || "$task_id" == "null" ]]; then
+        echo "FAIL: No task_id from init"
         return 1
     fi
 
-    echo "Benchmark finished. Retrieving results..."
+    # WAIT for init to complete (status → ready)
+    if ! poll_status "$task_id"; then
+        echo "FAIL: Status polling error"
+        return 1
+    fi
+    status=$(curl -s "$SERVER_URL/api/benchmark/status/$task_id" | jq -r '.status')
+    if [[ "$status" != "ready" ]]; then
+        echo "FAIL: Expected 'ready', got '$status'"
+        return 1
+    fi
+
+    # LAUNCH
+    launch_resp=$(curl -s -X POST "$SERVER_URL/api/benchmark/launch" \
+        -H 'Content-Type: application/json' \
+        -d '{"secret_key":"'"$VALID_SECRET"'","task_id":"'"$task_id"'","command":"'"$COMMAND"'"}')
+    echo "Launch response: $launch_resp"
+
+    # WAIT for benchmark to finish
+    if ! poll_status "$task_id"; then
+        echo "FAIL: Status polling error"
+        return 1
+    fi
+    status=$(curl -s "$SERVER_URL/api/benchmark/status/$task_id" | jq -r '.status')
+    if [[ "$status" != "finished" ]]; then
+        echo "FAIL: Expected 'finished', got '$status'"
+        return 1
+    fi
+
+    # RESULTS
     results=$(curl -s "$SERVER_URL/api/benchmark/results/$task_id")
     echo "Results:"
     echo "$results" | jq .
-    echo "=== Test 1 Completed ==="
-    echo ""
+    echo "=== Test 1 completed ==="
+    echo
+    return 0
 }
 
-# Test 2: Launch with invalid secret.
-function test_invalid_secret() {
-    echo "=== Test 2: Invalid Secret ==="
-    response=$(curl -s -X POST "$SERVER_URL/api/benchmark/launch" \
-      -H "Content-Type: application/json" \
-      -d "{\"command\": \"$COMMAND\", \"secret_key\": \"$INVALID_SECRET\"}")
-    echo "Response:"
-    echo "$response" | jq .
-    echo "=== Test 2 Completed ==="
-    echo ""
+# Test 2: Error scenarios
+test_errors() {
+    echo "=== Test 2: Error Scenarios ==="
+
+    # Invalid secret on init
+    echo "-- Invalid init secret --"
+    curl -s -X POST "$SERVER_URL/api/benchmark/init" \
+        -H 'Content-Type: application/json' \
+        -d '{"secret_key":"'"$INVALID_SECRET"'","pre_cmd_exec":"echo"}' | jq .
+
+    # Launch with missing task_id or command
+    echo "-- Launch missing params --"
+    curl -s -X POST "$SERVER_URL/api/benchmark/launch" \
+        -H 'Content-Type: application/json' \
+        -d '{"secret_key":"'"$VALID_SECRET"'"}' | jq .
+
+    # Launch with non-existent task_id
+    echo "-- Launch with non-existent task_id --"
+    curl -s -X POST "$SERVER_URL/api/benchmark/launch" \
+        -H 'Content-Type: application/json' \
+        -d '{"secret_key":"'"$VALID_SECRET"'","task_id":"'"$FAKE_ID"'","command":"'"$COMMAND"'"}' | jq .
+
+    # Status for non-existent task
+    echo "-- Status non-existent --"
+    curl -s "$SERVER_URL/api/benchmark/status/$FAKE_ID" | jq .
+
+    # Results for task not finished
+    echo "-- Results before finish --"
+    init2=$(curl -s -X POST "$SERVER_URL/api/benchmark/init" \
+        -H 'Content-Type: application/json' \
+        -d '{"secret_key":"'"$VALID_SECRET"'","pre_cmd_exec":"sleep 3"}')
+    tid2=$(echo "$init2" | jq -r '.task_id')
+    echo "New task: $tid2"
+    curl -s "$SERVER_URL/api/benchmark/results/$tid2" | jq .
+
+    echo "=== Test 2 completed ==="
+    echo
 }
 
-# Test 3: Launch with missing command.
-function test_missing_command() {
-    echo "=== Test 3: Missing Command ==="
-    response=$(curl -s -X POST "$SERVER_URL/api/benchmark/launch" \
-      -H "Content-Type: application/json" \
-      -d "{\"secret_key\": \"$VALID_SECRET\"}")
-    echo "Response:"
-    echo "$response" | jq .
-    echo "=== Test 3 Completed ==="
-    echo ""
-}
+# Main
 
-# Test 4: Launch with missing secret key.
-function test_missing_secret() {
-    echo "=== Test 4: Missing Secret Key ==="
-    response=$(curl -s -X POST "$SERVER_URL/api/benchmark/launch" \
-      -H "Content-Type: application/json" \
-      -d "{\"command\": \"$COMMAND\"}")
-    echo "Response:"
-    echo "$response" | jq .
-    echo "=== Test 4 Completed ==="
-    echo ""
-}
+echo "Running tests against $SERVER_URL"
+if ! command -v jq &> /dev/null; then
+    echo "ERROR: 'jq' is required but not installed."
+    exit 1
+fi
 
-# Test 5: Query status for a non-existent task.
-function test_nonexistent_status() {
-    echo "=== Test 5: Non-existent Task Status ==="
-    fake_id="non-existent-task-id"
-    response=$(curl -s "$SERVER_URL/api/benchmark/status/$fake_id")
-    echo "Response:"
-    echo "$response" | jq .
-    echo "=== Test 5 Completed ==="
-    echo ""
-}
-
-# Test 6: Query results for a non-existent task.
-function test_nonexistent_results() {
-    echo "=== Test 6: Non-existent Task Results ==="
-    fake_id="non-existent-task-id"
-    response=$(curl -s "$SERVER_URL/api/benchmark/results/$fake_id")
-    echo "Response:"
-    echo "$response" | jq .
-    echo "=== Test 6 Completed ==="
-    echo ""
-}
-
-# Test 7: Retrieve results for a running task (should return error).
-function test_running_results() {
-    echo "=== Test 7: Results for Running Task ==="
-    response=$(curl -s -X POST "$SERVER_URL/api/benchmark/launch" \
-      -H "Content-Type: application/json" \
-      -d "{\"command\": \"$LONG_COMMAND\", \"secret_key\": \"$VALID_SECRET\"}")
-    echo "Launch response: $response"
-    task_id=$(echo "$response" | jq -r '.task_id')
-    if [ -z "$task_id" ] || [ "$task_id" == "null" ]; then
-        echo "Test 7 FAILED: No valid task_id returned."
-        return 1
-    fi
-    echo "Task ID: $task_id"
-    
-    # Immediately query results; expected to be an error because the task is still running.
-    results=$(curl -s "$SERVER_URL/api/benchmark/results/$task_id")
-    echo "Immediate Results Response (expected error):"
-    echo "$results" | jq .
-    
-    # Wait for the task to finish.
-    echo "Waiting for task to finish..."
-    poll_status "$task_id"
-    echo "=== Test 7 Completed ==="
-    echo ""
-}
-
-# Run all tests.
-echo "Running all tests..."
 test_valid
-test_invalid_secret
-test_missing_command
-test_missing_secret
-test_nonexistent_status
-test_nonexistent_results
-test_running_results
-echo "All tests completed."
+
+test_errors
+
+echo "All tests done."

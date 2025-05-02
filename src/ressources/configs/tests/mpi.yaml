@@ -1,0 +1,11 @@
+cluster_instances:    
+  - name: "HPL"
+    pre_process_cmd: ""
+    run_count: 2
+    benchmark:
+      - id: 100
+        pre_process_cmd: "wget https://raw.githubusercontent.com/aurelienizl/hpc-research/refs/heads/v2/src/ressources/configs/hpl/HPL_COMP.conf -O HPL.dat"
+        command_line: "xhpl"
+        instances: 1      
+        target_nodes:
+          - "127.0.0.1"

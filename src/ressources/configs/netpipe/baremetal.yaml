@@ -2,7 +2,6 @@ cluster_instances:
   - name: "Bare-Metal-1I-Intra"
     run_count: 5
     pre_process_cmd: "bash /script.sh 8 16384 0 && sleep 10" # This shutdown all the VMs
-    post_process_cmd: ""
     benchmark:
       - id: 100
         type: "NPmpi"
@@ -15,7 +14,6 @@ cluster_instances:
         instances: 1
   - name: "Bare-Metal-1I-Inter"
     pre_process_cmd: ""
-    post_process_cmd: ""
     run_count: 5
     benchmark:
       - id: 100
@@ -31,7 +29,6 @@ cluster_instances:
   - name: "Bare-Metal-8I-Intra"
     run_count: 5
     pre_process_cmd: ""
-    post_process_cmd: ""
     benchmark:
       - id: 100
         type: "NPmpi"
@@ -44,7 +41,6 @@ cluster_instances:
         instances: 8
   - name: "Bare-Metal-8I-Inter"
     pre_process_cmd: ""
-    post_process_cmd: ""
     run_count: 5
     benchmark:
       - id: 100
