@@ -33,7 +33,7 @@ cluster_instances:
           - "192.168.1.30:2"
           - "192.168.1.31:2"
           - "192.168.1.32:2"
-          - "192.168.1.33:2
+          - "192.168.1.33:2"
         mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
         target_nodes:
           - "192.168.1.30"
