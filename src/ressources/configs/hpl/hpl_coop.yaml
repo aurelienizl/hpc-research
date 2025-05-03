@@ -2,7 +2,7 @@
 cluster_instances:    
   - name: "HPL-COOP-8VM"
     pre_process_cmd: "bash /script.sh 1 2048 8 && sleep 60"
-    run_count: 5
+    run_count: 3
     benchmark:
       - id: 100
         pre_process_cmd: "wget https://raw.githubusercontent.com/aurelienizl/hpc-research/refs/heads/v2/src/ressources/configs/hpl/HPL_COOP.conf -O HPL.dat"
@@ -23,7 +23,7 @@ cluster_instances:
         instances: 1   
   - name: "HPL-COOP-4VM"
     pre_process_cmd: "bash /script.sh 2 4096 4 && sleep 60"
-    run_count: 5
+    run_count: 3
     benchmark:
       - id: 100
         pre_process_cmd: "wget https://raw.githubusercontent.com/aurelienizl/hpc-research/refs/heads/v2/src/ressources/configs/hpl/HPL_COOP.conf -O HPL.dat"
@@ -40,7 +40,7 @@ cluster_instances:
         instances: 1   
   - name: "HPL-COOP-2VM"
     pre_process_cmd: "bash /script.sh 4 8192 2 && sleep 60"
-    run_count: 5
+    run_count: 3
     benchmark:
       - id: 100
         pre_process_cmd: "wget https://raw.githubusercontent.com/aurelienizl/hpc-research/refs/heads/v2/src/ressources/configs/hpl/HPL_COOP.conf -O HPL.dat"
@@ -55,7 +55,7 @@ cluster_instances:
         instances: 1   
   - name: "HPL-COOP-1VM"
     pre_process_cmd: "bash /script.sh 8 16384 1 && sleep 60"
-    run_count: 5
+    run_count: 3
     benchmark:
       - id: 100
         pre_process_cmd: "wget https://raw.githubusercontent.com/aurelienizl/hpc-research/refs/heads/v2/src/ressources/configs/hpl/HPL_COOP.conf -O HPL.dat"
