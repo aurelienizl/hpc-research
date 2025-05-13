@@ -1,0 +1,26 @@
+# This file is part of the competitive HPL benchmark suite.
+cluster_instances:    
+  - name: "HPL-COMP-1VM"
+    pre_process_cmd: "bash /script.sh 8 16384 0 && sleep 60"
+    run_count: 3
+    benchmark:
+      - id: 100
+        pre_process_cmd: "wget https://raw.githubusercontent.com/aurelienizl/hpc-research/refs/heads/v2/src/ressources/configs/hpl/HPL_COMP.conf -O HPL.dat"
+        command_line: "xhpl"
+        target_nodes:
+          - "127.0.0.1"
+        instances: 8
+  - name: "HPL-COOP-1VM"
+    pre_process_cmd: "bash /script.sh 8 16384 0 && sleep 60"
+    run_count: 3
+    benchmark:
+      - id: 100
+        pre_process_cmd: "wget https://raw.githubusercontent.com/aurelienizl/hpc-research/refs/heads/v2/src/ressources/configs/hpl/HPL_COOP.conf -O HPL.dat"
+        type: "xhpl"
+        mpi_processes: 8
+        mpi_hosts:
+          - "127.0.0.1:8"
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "127.0.0.1"
+        instances: 1

@@ -1,0 +1,61 @@
+cluster_instances:   
+  - name: "netpipe-single-inter-8cpu"
+    pre_process_cmd: "bash /script.sh 8 16384 1 && sleep 60"
+    post_process_cmd: ""
+    run_count: 5
+    benchmark:
+      - id: 100
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:1"
+          - "192.168.1.251:1"
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.30"
+        instances: 1      
+  - name: "netpipe-single-inter-4cpu"
+    pre_process_cmd: "bash /script.sh 4 8192 1 && sleep 60"
+    post_process_cmd: ""
+    run_count: 5
+    benchmark:
+      - id: 100
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:1"
+          - "192.168.1.251:1"
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.30"
+        instances: 1      
+  - name: "netpipe-single-inter-2cpu"
+    pre_process_cmd: "bash /script.sh 2 4096 1 && sleep 60"
+    post_process_cmd: ""
+    run_count: 5
+    benchmark:
+      - id: 100
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:1"
+          - "192.168.1.251:1"
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.30"
+        instances: 1      
+  - name: "netpipe-single-inter-1cpu"
+    pre_process_cmd: "bash /script.sh 1 2048 1 && sleep 60"
+    post_process_cmd: ""
+    run_count: 5
+    benchmark:
+      - id: 100
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:1"
+          - "192.168.1.251:1"
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.30"
+        instances: 1      

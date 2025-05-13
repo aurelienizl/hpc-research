@@ -1,122 +1,70 @@
 #!/bin/bash
+# This script sets up a fresh Ubuntu 22.04 LTS server VM by configuring:
+#  - The hostname (updates /etc/hostname and /etc/hosts)
+#  - A static IP configuration via netplan
+#
+# Run this script as root.
 
-# Check if script is run as root
-if [ "$EUID" -ne 0 ]; then
-   echo "Please run as root"
-   exit 1
+# Ensure the script is run as root
+if [[ $EUID -ne 0 ]]; then
+  echo "This script must be run as root. Try using sudo."
+  exit 1
 fi
 
-echo "Starting VM template preparation..."
+# Prompt for input parameters
+read -p "Enter new hostname: " NEW_HOSTNAME
+read -p "Enter network interface (e.g., ens33): " NET_IF
+read -p "Enter static IP address with CIDR (e.g., 192.168.1.100/24): " STATIC_IP
+read -p "Enter gateway IP (e.g., 192.168.1.1): " GATEWAY
+read -p "Enter DNS servers (comma-separated, e.g., 8.8.8.8,8.8.4.4): " DNS_SERVERS
 
-# 1. Create first boot script
-cat > /usr/local/sbin/first-boot-init.sh << 'EOF'
-#!/bin/bash
+# Strip any spaces from the DNS list (ensuring proper YAML formatting)
+dns_list=$(echo "$DNS_SERVERS" | tr -d ' ')
 
-# Generate new hostname
-NEW_HOSTNAME=$(openssl rand -hex 6)
-hostnamectl set-hostname $NEW_HOSTNAME
+# Update hostname
+echo "$NEW_HOSTNAME" > /etc/hostname
+hostnamectl set-hostname "$NEW_HOSTNAME"
 
-# Regenerate SSH host keys
-rm -f /etc/ssh/ssh_host_*
-dpkg-reconfigure openssh-server
+# Update /etc/hosts to ensure local resolution works correctly.
+# This adds or updates a line for 127.0.1.1 with the new hostname.
+if grep -q "127.0.1.1" /etc/hosts; then
+  sed -i "s/^127\.0\.1\.1.*/127.0.1.1 $NEW_HOSTNAME/" /etc/hosts
+else
+  echo "127.0.1.1 $NEW_HOSTNAME" >> /etc/hosts
+fi
 
-# Update the system
-apt update && apt upgrade -y
+# Backup any existing netplan configuration file(s)
+NETPLAN_DIR="/etc/netplan"
+BACKUP_DIR="/etc/netplan_old/backup_$(date +%F_%T)"
+mkdir -p "$BACKUP_DIR"
+mv "$NETPLAN_DIR"/*.yaml "$BACKUP_DIR" 2>/dev/null
 
-# Generate new machine-id
-rm -f /etc/machine-id
-dbus-uuidgen --ensure=/etc/machine-id
-
-# Configure network if needed
-netplan apply
-
-# Remove self after execution
-rm -- "$0"
-# Remove the systemd service
-systemctl disable first-boot-init
-rm /etc/systemd/system/first-boot-init.service
-EOF
-
-# Make first boot script executable
-chmod +x /usr/local/sbin/first-boot-init.sh
-
-# 2. Create systemd service for first boot
-cat > /etc/systemd/system/first-boot-init.service << EOF
-[Unit]
-Description=First boot initialization
-After=network.target
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/sbin/first-boot-init.sh
-RemainAfterExit=yes
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Enable the service
-systemctl enable first-boot-init
-
-# 3. Update and clean system
-echo "Updating and cleaning system..."
-apt update
-apt upgrade -y
-apt autoremove -y
-apt clean
-
-# 4. Clear logs and temporary files
-echo "Clearing logs and temporary files..."
-find /var/log -type f -exec truncate -s 0 {} \;
-rm -rf /tmp/*
-rm -rf /var/tmp/*
-
-# 5. Remove machine-specific information
-echo "Removing machine-specific information..."
-truncate -s 0 /etc/machine-id
-rm -f /var/lib/dbus/machine-id
-ln -s /etc/machine-id /var/lib/dbus/machine-id
-
-# 6. Clear network configuration
-echo "Cleaning network configuration..."
-rm -f /etc/udev/rules.d/70-persistent-net.rules
-rm -f /lib/udev/rules.d/75-persistent-net-generator.rules
-
-# Create a basic netplan configuration
-cat > /etc/netplan/00-template.yaml << EOF
+# Create a new netplan configuration file
+cat > "$NETPLAN_DIR/01-netcfg.yaml" <<EOF
 network:
   version: 2
+  renderer: networkd
   ethernets:
-    eth0:
-      dhcp4: true
+    $NET_IF:
+      dhcp4: no
+      addresses: [$STATIC_IP]
+      gateway4: $GATEWAY
+      nameservers:
+        addresses: [$dns_list]
 EOF
 
-# 7. Clear bash history
-echo "Clearing bash history..."
-cat /dev/null > ~/.bash_history
-history -c
+chmod 644 "$NETPLAN_DIR/01-netcfg.yaml"
 
-# 8. Remove SSH keys
-echo "Removing SSH host keys..."
-rm -f /etc/ssh/ssh_host_*
+netplan generate
+netplan apply
 
-# 9. Clear cloud-init if installed
-if [ -f /etc/cloud/cloud.cfg ]; then
-   echo "Cleaning cloud-init..."
-   cloud-init clean --logs
-fi
-
-# 10. Final security configurations
-echo "Setting up final security configurations..."
-#cat > /etc/ssh/sshd_config.d/hardening.conf << EOF
-#PermitRootLogin no
-#PasswordAuthentication no
-#MaxAuthTries 3
-#EOF
+echo "Configuration complete."
+echo "Hostname set to: $NEW_HOSTNAME"
+echo "Network interface $NET_IF configured with static IP $STATIC_IP, gateway $GATEWAY, and DNS [$dns_list]."
 
 sudo ufw disable
-
-echo "Template preparation complete!"
-echo "The system will shutdown in 10 seconds..."
-sleep 10
-shutdown -h now
+echo "Firewall disabled."
+echo "Please reboot the server for changes to take effect."
+echo "Rebooting in 5 seconds..."
+sleep 5
+reboot

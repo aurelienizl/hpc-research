@@ -1,0 +1,73 @@
+# This file contains the configuration for the NetPipe benchmark.
+
+cluster_instances:
+  - name: "netpipe-multi-intra-8vm"
+    pre_process_cmd: "bash /script.sh 1 2048 8 && sleep 60"
+    post_process_cmd: ""
+    run_count: 5
+    benchmark:
+      - id: 100
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:2"
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.30"
+          - "192.168.1.31"
+          - "192.168.1.32"
+          - "192.168.1.33"
+          - "192.168.1.34"
+          - "192.168.1.35"
+          - "192.168.1.36"
+          - "192.168.1.37"
+        instances: 1
+
+  - name: "netpipe-multi-intra-4vm"
+    pre_process_cmd: "bash /script.sh 2 4096 4 && sleep 60"
+    post_process_cmd: ""
+    run_count: 5
+    benchmark:
+      - id: 100
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:2"
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.30"
+          - "192.168.1.31"
+          - "192.168.1.32"
+          - "192.168.1.33"
+        instances: 2
+  
+  - name: "netpipe-multi-intra-2vm"
+    pre_process_cmd: "bash /script.sh 4 8192 2 && sleep 60"
+    post_process_cmd: ""
+    run_count: 5
+    benchmark:
+      - id: 100
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:2"
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.30"
+          - "192.168.1.31"
+        instances: 4
+
+  - name: "netpipe-multi-intra-1vm"
+    pre_process_cmd: "bash /script.sh 8 16384 1 && sleep 60"
+    post_process_cmd: ""
+    run_count: 5
+    benchmark:
+      - id: 100
+        type: "NPmpi"
+        mpi_processes: 2
+        mpi_hosts:
+          - "127.0.0.1:2"
+        mpi_args: "--oversubscribe --bind-to none --mca plm_rsh_agent \"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\""
+        target_nodes:
+          - "192.168.1.30"
+        instances: 8      

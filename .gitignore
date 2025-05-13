@@ -11,6 +11,11 @@
 
 # Built Visual Studio Code Extensions
 *.vsix
+*.xml
+*.txt
+*.out
+*.log
+
 
 # Python
 __pycache__/
